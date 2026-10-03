@@ -67,7 +67,7 @@ public class BountyBoardTest
 	}
 
 	@Test
-	public void noBlueprintsBeforeTownHallTwo()
+	public void noBlueprintsBeforeTownHallThree()
 	{
 		SettlementState state = stateWithTownHall(1);
 		assertNull(BountyBoard.nextBlueprint(state, new Random(7)));
@@ -79,7 +79,7 @@ public class BountyBoardTest
 	@Test
 	public void availableBlueprintsTakeOpenSlotsWithoutDuplicates()
 	{
-		SettlementState state = stateWithTownHall(2);
+		SettlementState state = stateWithTownHall(3);
 		BountyBoard board = new BountyBoard(new Random(7));
 		board.fill(state);
 
@@ -103,11 +103,11 @@ public class BountyBoardTest
 	@Test
 	public void ownedBlueprintsAreNotOfferedAgain()
 	{
-		SettlementState state = stateWithTownHall(2);
-		state.getBlueprints().add(Building.SAWMILL);
+		SettlementState state = stateWithTownHall(3);
+		state.getBlueprints().add(Building.TAVERN);
 		Building offered = BountyBoard.nextBlueprint(state, new Random(7));
 		assertNotNull(offered);
-		assertTrue(offered != Building.SAWMILL);
+		assertTrue(offered != Building.TAVERN);
 		assertTrue(BuildingService.isBlueprintAvailable(state, offered));
 	}
 

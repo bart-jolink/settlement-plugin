@@ -109,7 +109,10 @@ public class BuildingServiceTest
 		SettlementState state = richState();
 		assertEquals(UpgradeCheck.Status.NEEDS_TOWN_HALL, BuildingService.check(state, Building.SAWMILL).getStatus());
 
-		state.setLevel(Building.TOWN_HALL, 2);
+		state.setLevel(Building.TOWN_HALL, 3);
+		assertEquals(UpgradeCheck.Status.NEEDS_TOWN_HALL, BuildingService.check(state, Building.SAWMILL).getStatus());
+
+		state.setLevel(Building.TOWN_HALL, 4);
 		assertEquals(UpgradeCheck.Status.NEEDS_BLUEPRINT, BuildingService.check(state, Building.SAWMILL).getStatus());
 
 		state.getBlueprints().add(Building.SAWMILL);
