@@ -111,7 +111,7 @@ public class SettlementPlugin extends Plugin
 		panel = new SettlementPanel(itemManager, panelActions);
 		navButton = NavigationButton.builder()
 			.tooltip("Settlement")
-			.icon(ImageUtil.loadImageResource(SettlementPlugin.class, "/icon.png"))
+			.icon(ImageUtil.loadImageResource(SettlementPlugin.class, "icon.png"))
 			.priority(8)
 			.panel(panel)
 			.build();
