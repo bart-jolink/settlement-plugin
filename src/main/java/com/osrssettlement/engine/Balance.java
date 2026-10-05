@@ -63,7 +63,7 @@ public final class Balance
 	public static final double BOUNTY_EPIC_YIELD_SCALE = 4.0;
 	// 3 hours of logged-in play; keeps a board of unreachable tasks from locking progress forever
 	public static final int BOUNTY_EXPIRY_TICKS = 18_000;
-	public static final double BOUNTY_SCALE_PER_TOWN_HALL = 0.25;
+	public static final double BOUNTY_SCALE_PER_TOWN_HALL = 0.3;
 	public static final int BOUNTY_RARE_PARTS_TOWN_HALL = 3;
 	public static final int BOUNTY_EPIC_PARTS_TOWN_HALL = 5;
 	public static final int BOUNTY_ARTIFACT_TOWN_HALL = 6;
