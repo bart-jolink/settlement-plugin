@@ -98,13 +98,13 @@ public enum Building
 
 	WONDER("Wonder", BuildingTier.WONDER, BuildingType.LEGENDARY, ItemID.SKILLCAPE_MAX,
 		"The crown of your settlement. Can you complete it? Every level boosts all yields.",
-		Map.ofEntries(Map.entry(BARS, 3000), Map.entry(CHARCOAL, 3000), Map.entry(PLANKS, 3000),
-			Map.entry(LEATHER, 3000), Map.entry(ARROWS, 3000), Map.entry(RATIONS, 3000),
-			Map.entry(POTIONS, 3000), Map.entry(BLESSINGS, 3000), Map.entry(ENCHANTMENTS, 3000),
-			Map.entry(GEMS, 3000), Map.entry(COINS, 3000), Map.entry(MARKS, 3000),
-			Map.entry(CARGO, 3000), Map.entry(CURIOS, 1000), 
-			Map.entry(MONSTER_PARTS, 10_000), Map.entry(RARE_MONSTER_PARTS, 2000),
-			Map.entry(EPIC_MONSTER_PARTS, 500), Map.entry(ARTIFACT, 50)));
+		Map.ofEntries(Map.entry(BARS, 10_000), Map.entry(CHARCOAL, 10_000), Map.entry(PLANKS, 10_000),
+			Map.entry(LEATHER, 10_000), Map.entry(ARROWS, 10_000), Map.entry(RATIONS, 10_000),
+			Map.entry(POTIONS, 10_000), Map.entry(BLESSINGS, 10_000), Map.entry(ENCHANTMENTS, 10_000),
+			Map.entry(GEMS, 10_000), Map.entry(COINS, 10_000), Map.entry(MARKS, 10_000),
+			Map.entry(CARGO, 10_000), Map.entry(CURIOS, 2_500), 
+			Map.entry(MONSTER_PARTS, 10_000), Map.entry(RARE_MONSTER_PARTS, 3_000),
+			Map.entry(EPIC_MONSTER_PARTS, 1_000), Map.entry(ARTIFACT, 50)));
 
 	private final String displayName;
 	private final BuildingTier tier;
