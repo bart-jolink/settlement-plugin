@@ -11,7 +11,7 @@ import java.util.Map;
 public final class Balance
 {
 	public static final int MAX_BUILDING_LEVEL = 10;
-	public static final double COST_SCALE = 0.85;
+	public static final double COST_SCALE = 1;
 	public static final double COST_GROWTH = 1.55;
 	public static final int TOWN_HALL_UPGRADE_BUILDINGS = 3;
 	public static final int WONDER_MIN_BUILDING_LEVEL = 10;
