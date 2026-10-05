@@ -62,11 +62,14 @@ public class SettlementPanel extends PluginPanel
 		MaterialTabGroup tabGroup = new MaterialTabGroup(display);
 		tabGroup.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
 		tabGroup.setBorder(new EmptyBorder(0, 0, 6, 0));
-		MaterialTab town = new MaterialTab("Town", tabGroup, Ui.scroll(townTab));
+		MaterialTab town = new MaterialTab("Town", tabGroup, townTab);
 		tabGroup.addTab(town);
-		tabGroup.addTab(new MaterialTab("Stock", tabGroup, Ui.scroll(stockTab)));
-		tabGroup.addTab(new MaterialTab("Activities", tabGroup, Ui.scroll(activityTab)));
-		tabGroup.addTab(new MaterialTab("Log", tabGroup, Ui.scroll(logTab)));
+		MaterialTab stock = new MaterialTab("Stock", tabGroup, Ui.scroll(stockTab));
+		tabGroup.addTab(stock);
+		MaterialTab activities = new MaterialTab("Activities", tabGroup, Ui.scroll(activityTab));
+		tabGroup.addTab(activities);
+		MaterialTab log = new MaterialTab("Log", tabGroup, Ui.scroll(logTab));
+		tabGroup.addTab(log);
 		tabGroup.select(town);
 
 		JPanel tabs = new JPanel(new BorderLayout());

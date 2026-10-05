@@ -11,10 +11,11 @@ import java.util.Map;
 public final class Balance
 {
 	public static final int MAX_BUILDING_LEVEL = 10;
-	public static final double COST_SCALE = 0.85;
+	public static final double COST_SCALE = 1;
 	public static final double COST_GROWTH = 1.55;
 	public static final int TOWN_HALL_UPGRADE_BUILDINGS = 3;
 	public static final int WONDER_MIN_BUILDING_LEVEL = 10;
+	public static final int WONDER_REQUIRED_BUILDING_COUNT = 20;
 	public static final int FIRST_WONDER_TARGET_HOURS = 100;
 	public static final double FIRST_WONDER_MAX_TARGET_FACTOR = 2;
 
@@ -63,7 +64,7 @@ public final class Balance
 	public static final double BOUNTY_EPIC_YIELD_SCALE = 4.0;
 	// 3 hours of logged-in play; keeps a board of unreachable tasks from locking progress forever
 	public static final int BOUNTY_EXPIRY_TICKS = 18_000;
-	public static final double BOUNTY_SCALE_PER_TOWN_HALL = 0.25;
+	public static final double BOUNTY_SCALE_PER_TOWN_HALL = 0.3;
 	public static final int BOUNTY_RARE_PARTS_TOWN_HALL = 3;
 	public static final int BOUNTY_EPIC_PARTS_TOWN_HALL = 5;
 	public static final int BOUNTY_ARTIFACT_TOWN_HALL = 6;

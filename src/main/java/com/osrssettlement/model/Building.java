@@ -80,42 +80,50 @@ public enum Building
 		"Consecrated with Epic Monster Parts and raid Artifacts. Boosts every yield.",
 		Map.of(EPIC_MONSTER_PARTS, 25, BLESSINGS, 100, ENCHANTMENTS, 120, GEMS, 20, ARTIFACT, 1)),
 
-	KELDAGRIM_CONSORTIUM("Keldagrim Consortium", BuildingTier.B, ItemID.GOLD_LEAF,
+	KELDAGRIM_CONSORTIUM("Keldagrim Consortium", BuildingTier.C, BuildingType.SPECIAL, ItemID.GOLD_LEAF,
 		"Exchange materials with the dwarves of Keldagrim. Each level increases the amount received per trade by 10%.",
 		Map.of(COINS, 500, ORE, 200, STONE, 150, PLANKS, 150, BARS, 100)),
-	MUSEUM_CAMP("Museum Camp", BuildingTier.C, ItemID.FOSSIL_RARE_UNID,
-		"Curators pay more for your finds: bigger bounty supply rewards. Not required for the Wonder.",
+	MUSEUM_CAMP("Museum Camp", BuildingTier.D, BuildingType.SPECIAL, ItemID.FOSSIL_RARE_UNID,
+		"Curators pay more for your finds: bigger bounty supply rewards.",
 		Map.of(PLANKS, 200, HIDES, 180, GRAIN, 180, BONES, 100, RATIONS, 100)),
-	ARCEUUS_LIBRARY("Arceuus Library", BuildingTier.D, ItemID.BOOK_OF_THE_DEAD,
-		"Studied tomes make bounty yield boosts last longer. Not required for the Wonder.",
+	ARCEUUS_LIBRARY("Arceuus Library", BuildingTier.E, BuildingType.SPECIAL, ItemID.BOOK_OF_THE_DEAD,
+		"Studied tomes make bounty yield boosts last longer.",
 		Map.of(RUNES, 200, BLESSINGS, 100, PLANKS, 60, CURIOS, 50, ENCHANTMENTS, 50)),
-	JALTEVAS_PYRAMID("Jaltevas Pyramid", BuildingTier.E, ItemID.AGILITY_PYRAMID_GOLD_PYRAMID ,
-		"Jaltevas's light strengthens positive events. Not required for the Wonder.",
+	JALTEVAS_PYRAMID("Jaltevas Pyramid", BuildingTier.F, BuildingType.SPECIAL, ItemID.AGILITY_PYRAMID_GOLD_PYRAMID ,
+		"Jaltevas's light strengthens positive events.",
 		Map.of(COINS, 200, MARKS, 200, LEATHER, 120, GEMS, 50)),
-	TOWER_OF_VOICES("Tower of Voices", BuildingTier.F, ItemID.LEAGUE_TRAILBLAZER_LAST_RECALL_TELEPORT,
-		"The Seren crystal resonates through your settlement, boosting every yield. Not required for the Wonder.",
+	TOWER_OF_VOICES("Tower of Voices", BuildingTier.G, BuildingType.SPECIAL, ItemID.LEAGUE_TRAILBLAZER_LAST_RECALL_TELEPORT,
+		"The Seren crystal resonates through your settlement, boosting every yield.",
 		Map.of(STONE, 300, BARS, 150, ENCHANTMENTS, 200, MARKS, 250, RARE_MONSTER_PARTS, 100)),
 
-	WONDER("Wonder", BuildingTier.WONDER, ItemID.SKILLCAPE_MAX,
+	WONDER("Wonder", BuildingTier.WONDER, BuildingType.LEGENDARY, ItemID.SKILLCAPE_MAX,
 		"The crown of your settlement. Can you complete it? Every level boosts all yields.",
-		Map.ofEntries(Map.entry(BARS, 3000), Map.entry(CHARCOAL, 3000), Map.entry(PLANKS, 3000),
-			Map.entry(LEATHER, 3000), Map.entry(ARROWS, 3000), Map.entry(RATIONS, 3000),
-			Map.entry(POTIONS, 3000), Map.entry(BLESSINGS, 3000), Map.entry(ENCHANTMENTS, 3000),
-			Map.entry(GEMS, 3000), Map.entry(COINS, 3000), Map.entry(MARKS, 3000),
-			Map.entry(CARGO, 3000), Map.entry(CURIOS, 1000), 
-			Map.entry(MONSTER_PARTS, 10_000), Map.entry(RARE_MONSTER_PARTS, 2000),
-			Map.entry(EPIC_MONSTER_PARTS, 500), Map.entry(ARTIFACT, 50)));
+		Map.ofEntries(Map.entry(BARS, 10_000), Map.entry(CHARCOAL, 10_000), Map.entry(PLANKS, 10_000),
+			Map.entry(LEATHER, 10_000), Map.entry(ARROWS, 10_000), Map.entry(RATIONS, 10_000),
+			Map.entry(POTIONS, 10_000), Map.entry(BLESSINGS, 10_000), Map.entry(ENCHANTMENTS, 10_000),
+			Map.entry(GEMS, 10_000), Map.entry(COINS, 10_000), Map.entry(MARKS, 10_000),
+			Map.entry(CARGO, 10_000), Map.entry(CURIOS, 2_500), 
+			Map.entry(MONSTER_PARTS, 10_000), Map.entry(RARE_MONSTER_PARTS, 3_000),
+			Map.entry(EPIC_MONSTER_PARTS, 1_000), Map.entry(ARTIFACT, 50)));
 
 	private final String displayName;
 	private final BuildingTier tier;
+	private final BuildingType type;
 	private final int iconItemId;
 	private final String description;
 	private final Map<Resource, Integer> baseCost;
 
 	Building(String displayName, BuildingTier tier, int iconItemId, String description, Map<Resource, Integer> baseCost)
 	{
+		this(displayName, tier, BuildingType.STANDARD, iconItemId, description, baseCost);
+	}
+
+	Building(String displayName, BuildingTier tier, BuildingType type, int iconItemId, String description,
+		Map<Resource, Integer> baseCost)
+	{
 		this.displayName = displayName;
 		this.tier = tier;
+		this.type = type;
 		this.iconItemId = iconItemId;
 		this.description = description;
 		this.baseCost = Collections.unmodifiableMap(new EnumMap<>(baseCost));
@@ -127,7 +135,7 @@ public enum Building
 	}
 
 	/**
-	 * Expedition buildings are not required for the Wonder.
+	 * Expedition buildings are individually optional but can contribute toward the Wonder requirement.
 	 */
 	public boolean isOptional()
 	{

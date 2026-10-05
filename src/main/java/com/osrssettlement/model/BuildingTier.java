@@ -13,6 +13,7 @@ public enum BuildingTier
 	D(5, true),
 	E(6, true),
 	F(8, true),
+	G(10, true),
 	WONDER(10, true);
 
 	private final int requiredTownHall;

@@ -5,10 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import com.osrssettlement.model.Building;
+import com.osrssettlement.model.BuildingType;
 import com.osrssettlement.model.MarketCategory;
 import com.osrssettlement.model.Resource;
 import com.osrssettlement.model.ResourceCategory;
 import com.osrssettlement.model.SettlementState;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -25,6 +27,18 @@ public class BuildingServiceTest
 			state.addStock(resource, 1_000_000);
 		}
 		return state;
+	}
+
+	@Test
+	public void buildingsHaveTheirDeclaredTypes()
+	{
+		assertEquals(BuildingType.STANDARD, Building.LUMBER_CAMP.getType());
+		assertEquals(BuildingType.SPECIAL, Building.KELDAGRIM_CONSORTIUM.getType());
+		assertEquals(BuildingType.SPECIAL, Building.MUSEUM_CAMP.getType());
+		assertEquals(BuildingType.SPECIAL, Building.ARCEUUS_LIBRARY.getType());
+		assertEquals(BuildingType.SPECIAL, Building.JALTEVAS_PYRAMID.getType());
+		assertEquals(BuildingType.SPECIAL, Building.TOWER_OF_VOICES.getType());
+		assertEquals(BuildingType.LEGENDARY, Building.WONDER.getType());
 	}
 
 	@Test
@@ -334,22 +348,28 @@ public class BuildingServiceTest
 	}
 
 	@Test
-	public void wonderNeedsEveryBuildingAtMinimumLevel()
+	public void wonderRequiresConfiguredStandardOrSpecialBuildingCountAtMinimumLevel()
 	{
 		SettlementState state = richState();
 		state.setLevel(Building.TOWN_HALL, Balance.MAX_BUILDING_LEVEL);
 		state.getBlueprints().add(Building.WONDER);
 		for (Building building : Building.values())
 		{
-			if (building != Building.TOWN_HALL && !building.isWonder())
+			if (building.getType() == BuildingType.SPECIAL)
 			{
 				state.setLevel(building, Balance.WONDER_MIN_BUILDING_LEVEL);
 			}
 		}
-		state.setLevel(Building.TREASURY, Balance.WONDER_MIN_BUILDING_LEVEL - 1);
-		assertEquals(UpgradeCheck.Status.NEEDS_BUILDINGS, BuildingService.check(state, Building.WONDER).getStatus());
+		Arrays.stream(Building.values())
+			.filter(building -> building.getType() == BuildingType.STANDARD && building != Building.TOWN_HALL)
+			.limit(Balance.WONDER_REQUIRED_BUILDING_COUNT - 1 - Arrays.stream(Building.values())
+				.filter(building -> building.getType() == BuildingType.SPECIAL).count())
+			.forEach(building -> state.setLevel(building, Balance.WONDER_MIN_BUILDING_LEVEL));
+		assertTrue(BuildingService.check(state, Building.WONDER).isOk());
 
-		state.setLevel(Building.TREASURY, Balance.WONDER_MIN_BUILDING_LEVEL);
+		state.setLevel(Building.TOWER_OF_VOICES, Balance.WONDER_MIN_BUILDING_LEVEL - 1);
+		assertEquals(UpgradeCheck.Status.NEEDS_BUILDINGS, BuildingService.check(state, Building.WONDER).getStatus());
+		state.setLevel(Building.TOWER_OF_VOICES, Balance.WONDER_MIN_BUILDING_LEVEL);
 		assertTrue(BuildingService.check(state, Building.WONDER).isOk());
 	}
 
@@ -372,7 +392,7 @@ public class BuildingServiceTest
 	}
 
 	@Test
-	public void wonderRequirementIncludesTownHallAndExcludesOptionalBuildings()
+	public void wonderRequirementIncludesTownHallAndSpecialBuildings()
 	{
 		SettlementState state = richState();
 		state.getBlueprints().add(Building.WONDER);
@@ -380,7 +400,7 @@ public class BuildingServiceTest
 		state.setLevel(Building.LUMBER_CAMP, Balance.WONDER_MIN_BUILDING_LEVEL);
 		for (Building building : Building.values())
 		{
-			if (building.isOptional())
+			if (building.getType() == BuildingType.SPECIAL)
 			{
 				state.setLevel(building, Balance.WONDER_MIN_BUILDING_LEVEL);
 			}
@@ -392,7 +412,13 @@ public class BuildingServiceTest
 			assertFalse(requirement.getStatus() == UpgradeCheck.Status.NEEDS_TOWN_HALL);
 			if (requirement.getStatus() == UpgradeCheck.Status.NEEDS_BUILDINGS)
 			{
-				assertEquals("Buildings at level 10 (2/21)", requirement.getDescription());
+				int current = (int) Arrays.stream(Building.values())
+					.filter(building -> building.getType() == BuildingType.STANDARD
+						|| building.getType() == BuildingType.SPECIAL)
+					.filter(building -> state.getLevel(building) >= Balance.WONDER_MIN_BUILDING_LEVEL)
+					.count();
+				assertEquals(String.format("Buildings at level %d (%d/%d)", Balance.WONDER_MIN_BUILDING_LEVEL,
+					current, Balance.WONDER_REQUIRED_BUILDING_COUNT), requirement.getDescription());
 				return;
 			}
 		}
@@ -400,7 +426,7 @@ public class BuildingServiceTest
 	}
 
 	@Test
-	public void bossBuildingsAreRequiredForTheWonder()
+	public void wonderRequiresConfiguredCountRatherThanEveryStandardBuilding()
 	{
 		assertFalse(Building.TROPHY_HALL.isOptional());
 		assertFalse(Building.ALTAR.isOptional());
@@ -416,6 +442,8 @@ public class BuildingServiceTest
 			}
 		}
 		state.setLevel(Building.ALTAR, Balance.WONDER_MIN_BUILDING_LEVEL - 1);
+		assertTrue(BuildingService.check(state, Building.WONDER).isOk());
+		state.setLevel(Building.TROPHY_HALL, Balance.WONDER_MIN_BUILDING_LEVEL - 1);
 		assertEquals(UpgradeCheck.Status.NEEDS_BUILDINGS, BuildingService.check(state, Building.WONDER).getStatus());
 	}
 
