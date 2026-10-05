@@ -228,7 +228,7 @@ public class SettlementSimulationTest
 			{
 				result.townHallTwoHours = Math.min(result.townHallTwoHours, hours);
 			}
-			if (state.getLevel(Building.TOWN_HALL) >= Balance.MAX_BUILDING_LEVEL)
+			if (state.getLevel(Building.TOWN_HALL) >= Balance.WONDER_MIN_BUILDING_LEVEL)
 			{
 				result.townHallTenHours = Math.min(result.townHallTenHours, hours);
 				if (!stopAtWonder)
@@ -269,7 +269,7 @@ public class SettlementSimulationTest
 	private static void recordTownHallBuildingGate(Result result, SettlementState state, double hours)
 	{
 		int townHall = state.getLevel(Building.TOWN_HALL);
-		if (townHall >= Balance.MAX_BUILDING_LEVEL)
+		if (townHall >= Balance.WONDER_MIN_BUILDING_LEVEL)
 		{
 			return;
 		}
@@ -425,7 +425,7 @@ public class SettlementSimulationTest
 		List<Building> core = Arrays.stream(Building.values())
 			.filter(building -> building != Building.TOWN_HALL && !building.isWonder() && !building.isOptional())
 			.collect(Collectors.toList());
-		if (townHall < Balance.MAX_BUILDING_LEVEL)
+		if (townHall < Balance.WONDER_MIN_BUILDING_LEVEL)
 		{
 			long ready = Arrays.stream(Building.values())
 				.filter(building -> building != Building.TOWN_HALL && !building.isWonder()
@@ -624,7 +624,7 @@ public class SettlementSimulationTest
 		public void requiresEveryNonOptionalBuildingAtWonderLevelBeforeWonder()
 		{
 			SettlementState state = new SettlementState();
-			state.setLevel(Building.TOWN_HALL, Balance.MAX_BUILDING_LEVEL);
+			state.setLevel(Building.TOWN_HALL, Balance.WONDER_MIN_BUILDING_LEVEL);
 			Arrays.stream(Building.values())
 				.filter(building -> building != Building.TOWN_HALL && !building.isWonder() && !building.isOptional())
 				.forEach(building -> state.setLevel(building, SIMULATION_WONDER_BUILDING_LEVEL));

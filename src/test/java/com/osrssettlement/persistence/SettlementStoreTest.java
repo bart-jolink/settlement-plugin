@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.osrssettlement.engine.Balance;
 import com.osrssettlement.engine.SettlementEngine;
 import com.osrssettlement.model.Boost;
 import com.osrssettlement.model.Building;
@@ -127,7 +128,7 @@ public class SettlementStoreTest
 			"{\"schemaVersion\":6,\"stock\":{\"LOGS\":-1}}",
 			"{\"schemaVersion\":6,\"stock\":{\"LOGS\":1e400}}",
 			"{\"schemaVersion\":6,\"labour\":{\"SMITHING\":-1}}",
-			"{\"schemaVersion\":6,\"levels\":{\"TOWN_HALL\":11}}",
+			"{\"schemaVersion\":6,\"levels\":{\"TOWN_HALL\":" + (Balance.MAX_BUILDING_LEVEL + 1) + "}}",
 			"{\"schemaVersion\":6,\"levels\":{\"TOWN_HALL\":1.5}}",
 			"{\"schemaVersion\":6,\"blueprints\":[\"MOON_BASE\"]}",
 			"{\"schemaVersion\":6,\"bounties\":[null]}",
