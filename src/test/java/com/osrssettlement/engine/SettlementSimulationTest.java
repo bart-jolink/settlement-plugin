@@ -7,6 +7,7 @@ import com.osrssettlement.model.Bounty;
 import com.osrssettlement.model.BountyReward;
 import com.osrssettlement.model.BountyType;
 import com.osrssettlement.model.Building;
+import com.osrssettlement.model.BuildingType;
 import com.osrssettlement.model.ClueTier;
 import com.osrssettlement.model.ExpeditionId;
 import com.osrssettlement.model.Resource;
@@ -315,15 +316,10 @@ public class SettlementSimulationTest
 
 	private static boolean allWonderBuildingsReady(SettlementState state)
 	{
-		for (Building building : Building.values())
-		{
-			if (building != Building.TOWN_HALL && !building.isWonder() && !building.isOptional()
-				&& state.getLevel(building) < SIMULATION_WONDER_BUILDING_LEVEL)
-			{
-				return false;
-			}
-		}
-		return true;
+		return Arrays.stream(Building.values())
+			.filter(building -> building.getType() == BuildingType.STANDARD || building.getType() == BuildingType.SPECIAL)
+			.filter(building -> state.getLevel(building) >= SIMULATION_WONDER_BUILDING_LEVEL)
+			.count() >= Balance.WONDER_REQUIRED_BUILDING_COUNT;
 	}
 
 	private static String resourceShortfalls(SettlementState state, Map<Resource, Integer> cost)
@@ -439,6 +435,10 @@ public class SettlementSimulationTest
 				.min(Comparator.<Building>comparingInt(state::getLevel).reversed()
 					.thenComparingInt(building -> totalCost(state, building)))
 				.orElseThrow(() -> new IllegalStateException("No building can satisfy the Town Hall gate"));
+		}
+		if (allWonderBuildingsReady(state))
+		{
+			return Building.WONDER;
 		}
 		return core.stream()
 			.filter(building -> state.getLevel(building) < SIMULATION_WONDER_BUILDING_LEVEL)
@@ -621,19 +621,25 @@ public class SettlementSimulationTest
 		}
 
 		@Test
-		public void requiresEveryNonOptionalBuildingAtWonderLevelBeforeWonder()
+		public void requiresConfiguredStandardOrSpecialBuildingCountAtWonderLevel()
 		{
 			SettlementState state = new SettlementState();
 			state.setLevel(Building.TOWN_HALL, Balance.WONDER_MIN_BUILDING_LEVEL);
+			long specialCount = Arrays.stream(Building.values())
+				.filter(building -> building.getType() == BuildingType.SPECIAL)
+				.count();
 			Arrays.stream(Building.values())
-				.filter(building -> building != Building.TOWN_HALL && !building.isWonder() && !building.isOptional())
+				.filter(building -> building.getType() == BuildingType.SPECIAL)
 				.forEach(building -> state.setLevel(building, SIMULATION_WONDER_BUILDING_LEVEL));
-			Building laggingBuilding = Arrays.stream(Building.values())
-				.filter(building -> building != Building.TOWN_HALL && !building.isWonder() && !building.isOptional())
-				.findFirst().orElseThrow(() -> new AssertionError("Expected a mandatory building"));
-			state.setLevel(laggingBuilding, SIMULATION_WONDER_BUILDING_LEVEL - 1);
-			assertEquals(laggingBuilding, nextGoal(state));
-			state.setLevel(laggingBuilding, SIMULATION_WONDER_BUILDING_LEVEL);
+			Arrays.stream(Building.values())
+				.filter(building -> building.getType() == BuildingType.STANDARD && building != Building.TOWN_HALL)
+				.limit(Balance.WONDER_REQUIRED_BUILDING_COUNT - 1 - specialCount)
+				.forEach(building -> state.setLevel(building, SIMULATION_WONDER_BUILDING_LEVEL));
+			assertEquals(Building.WONDER, nextGoal(state));
+
+			state.setLevel(Building.TOWER_OF_VOICES, SIMULATION_WONDER_BUILDING_LEVEL - 1);
+			assertTrue(nextGoal(state) != Building.WONDER);
+			state.setLevel(Building.TOWER_OF_VOICES, SIMULATION_WONDER_BUILDING_LEVEL);
 			assertEquals(Building.WONDER, nextGoal(state));
 		}
 	}

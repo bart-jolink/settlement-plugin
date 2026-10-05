@@ -1,6 +1,7 @@
 package com.osrssettlement.engine;
 
 import com.osrssettlement.model.Building;
+import com.osrssettlement.model.BuildingType;
 import com.osrssettlement.model.Resource;
 import com.osrssettlement.model.SettlementState;
 import java.util.ArrayList;
@@ -98,8 +99,8 @@ public final class BuildingService
 		else if (building.isWonder() && level == 0)
 		{
 			int requiredLevel = Balance.WONDER_MIN_BUILDING_LEVEL;
-			int current = countRequiredWonderBuildingsAtLevel(state, requiredLevel);
-			int required = countRequiredWonderBuildingsAtLevel(state, 0);
+			int current = countWonderEligibleBuildingsAtLevel(state, requiredLevel);
+			int required = Balance.WONDER_REQUIRED_BUILDING_COUNT;
 			requirements.add(new Requirement(UpgradeCheck.Status.NEEDS_BUILDINGS,
 				"Buildings at level " + requiredLevel + " (" + current + "/" + required + ")",
 				current >= required));
@@ -173,12 +174,12 @@ public final class BuildingService
 		return count;
 	}
 
-	private static int countRequiredWonderBuildingsAtLevel(SettlementState state, int level)
+	private static int countWonderEligibleBuildingsAtLevel(SettlementState state, int level)
 	{
 		int count = 0;
 		for (Building building : Building.values())
 		{
-			if (!building.isWonder() && !building.isOptional()
+			if ((building.getType() == BuildingType.STANDARD || building.getType() == BuildingType.SPECIAL)
 				&& state.getLevel(building) >= level)
 			{
 				count++;

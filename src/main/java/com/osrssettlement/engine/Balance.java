@@ -15,6 +15,7 @@ public final class Balance
 	public static final double COST_GROWTH = 1.55;
 	public static final int TOWN_HALL_UPGRADE_BUILDINGS = 3;
 	public static final int WONDER_MIN_BUILDING_LEVEL = 10;
+	public static final int WONDER_REQUIRED_BUILDING_COUNT = 20;
 	public static final int FIRST_WONDER_TARGET_HOURS = 100;
 	public static final double FIRST_WONDER_MAX_TARGET_FACTOR = 2;
 

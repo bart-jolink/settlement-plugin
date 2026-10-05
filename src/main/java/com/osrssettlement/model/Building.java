@@ -84,16 +84,16 @@ public enum Building
 		"Exchange materials with the dwarves of Keldagrim. Each level increases the amount received per trade by 10%.",
 		Map.of(COINS, 500, ORE, 200, STONE, 150, PLANKS, 150, BARS, 100)),
 	MUSEUM_CAMP("Museum Camp", BuildingTier.D, BuildingType.SPECIAL, ItemID.FOSSIL_RARE_UNID,
-		"Curators pay more for your finds: bigger bounty supply rewards. Not required for the Wonder.",
+		"Curators pay more for your finds: bigger bounty supply rewards.",
 		Map.of(PLANKS, 200, HIDES, 180, GRAIN, 180, BONES, 100, RATIONS, 100)),
 	ARCEUUS_LIBRARY("Arceuus Library", BuildingTier.E, BuildingType.SPECIAL, ItemID.BOOK_OF_THE_DEAD,
-		"Studied tomes make bounty yield boosts last longer. Not required for the Wonder.",
+		"Studied tomes make bounty yield boosts last longer.",
 		Map.of(RUNES, 200, BLESSINGS, 100, PLANKS, 60, CURIOS, 50, ENCHANTMENTS, 50)),
 	JALTEVAS_PYRAMID("Jaltevas Pyramid", BuildingTier.F, BuildingType.SPECIAL, ItemID.AGILITY_PYRAMID_GOLD_PYRAMID ,
-		"Jaltevas's light strengthens positive events. Not required for the Wonder.",
+		"Jaltevas's light strengthens positive events.",
 		Map.of(COINS, 200, MARKS, 200, LEATHER, 120, GEMS, 50)),
 	TOWER_OF_VOICES("Tower of Voices", BuildingTier.G, BuildingType.SPECIAL, ItemID.LEAGUE_TRAILBLAZER_LAST_RECALL_TELEPORT,
-		"The Seren crystal resonates through your settlement, boosting every yield. Not required for the Wonder.",
+		"The Seren crystal resonates through your settlement, boosting every yield.",
 		Map.of(STONE, 300, BARS, 150, ENCHANTMENTS, 200, MARKS, 250, RARE_MONSTER_PARTS, 100)),
 
 	WONDER("Wonder", BuildingTier.WONDER, BuildingType.LEGENDARY, ItemID.SKILLCAPE_MAX,
@@ -135,7 +135,7 @@ public enum Building
 	}
 
 	/**
-	 * Expedition buildings are not required for the Wonder.
+	 * Expedition buildings are individually optional but can contribute toward the Wonder requirement.
 	 */
 	public boolean isOptional()
 	{
