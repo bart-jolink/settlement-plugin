@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import com.osrssettlement.model.Building;
+import com.osrssettlement.model.BuildingType;
 import com.osrssettlement.model.MarketCategory;
 import com.osrssettlement.model.Resource;
 import com.osrssettlement.model.ResourceCategory;
@@ -25,6 +26,18 @@ public class BuildingServiceTest
 			state.addStock(resource, 1_000_000);
 		}
 		return state;
+	}
+
+	@Test
+	public void buildingsHaveTheirDeclaredTypes()
+	{
+		assertEquals(BuildingType.STANDARD, Building.LUMBER_CAMP.getType());
+		assertEquals(BuildingType.SPECIAL, Building.KELDAGRIM_CONSORTIUM.getType());
+		assertEquals(BuildingType.SPECIAL, Building.MUSEUM_CAMP.getType());
+		assertEquals(BuildingType.SPECIAL, Building.ARCEUUS_LIBRARY.getType());
+		assertEquals(BuildingType.SPECIAL, Building.JALTEVAS_PYRAMID.getType());
+		assertEquals(BuildingType.SPECIAL, Building.TOWER_OF_VOICES.getType());
+		assertEquals(BuildingType.LEGENDARY, Building.WONDER.getType());
 	}
 
 	@Test
