@@ -477,9 +477,11 @@ public class SettlementEngineTest
 	public void jaltevasPyramidStrengthensBuffsButNotSetbacks()
 	{
 		state.setLevel(Building.JALTEVAS_PYRAMID, 5);
-		double strengthened = 1 + 2 * (1 + 5 * Balance.PYRAMID_EVENT_BONUS_PER_LEVEL);
+		double strengthened = 1 + (SettlementEvent.FISH_MIGRATION.getMultiplier() - 1)
+			* (1 + 5 * Balance.PYRAMID_EVENT_BONUS_PER_LEVEL);
 		assertEquals(strengthened, YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.FISH_MIGRATION), 1e-9);
-		assertEquals(0.5, YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.TERMITES), 0);
+		assertEquals(SettlementEvent.TERMITES.getMultiplier(),
+			YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.TERMITES), 0);
 
 		activate(state, SettlementEvent.FISH_MIGRATION);
 		engine.onXp(Skill.FISHING, 100);
@@ -802,7 +804,9 @@ public class SettlementEngineTest
 		engine.onXp(Skill.FISHING, 100);
 		engine.onXp(Skill.WOODCUTTING, 100);
 
-		assertEquals(YieldCalculator.units(100) * global() * 3, state.getStock(Resource.FISH), 1e-9);
+		assertEquals(YieldCalculator.units(100) * global()
+			* YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.FISH_MIGRATION),
+			state.getStock(Resource.FISH), 1e-9);
 		assertEquals(YieldCalculator.units(100) * global(), state.getStock(Resource.LOGS), 1e-9);
 	}
 
@@ -811,16 +815,19 @@ public class SettlementEngineTest
 	{
 		activate(state, SettlementEvent.TERMITES);
 		engine.onXp(Skill.WOODCUTTING, 100);
-		assertEquals(YieldCalculator.units(100) * global() * 0.5, state.getStock(Resource.LOGS), 1e-9);
+		assertEquals(YieldCalculator.units(100) * global()
+			* YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.TERMITES),
+			state.getStock(Resource.LOGS), 1e-9);
 	}
 
 	@Test
 	public void eventStacksWithBoosts()
 	{
 		activate(state, SettlementEvent.LUMBERJACK_CONTEST);
-		state.getBoosts().add(new Boost(Resource.LOGS, 2, 100));
+		state.getBoosts().add(new Boost(Resource.LOGS, Balance.BOOST_MULTIPLIER, 100));
 		engine.onXp(Skill.WOODCUTTING, 10);
-		assertEquals(6 * global(), state.getStock(Resource.LOGS), 1e-9);
+		double eventMultiplier = YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.LUMBERJACK_CONTEST);
+		assertEquals(Balance.BOOST_MULTIPLIER * eventMultiplier * global(), state.getStock(Resource.LOGS), 1e-9);
 	}
 
 	@Test
@@ -831,7 +838,8 @@ public class SettlementEngineTest
 		engine.onXp(Skill.SMITHING, 10);
 
 		assertEquals(100 - Balance.PROCESS_INPUT_PER_UNIT, state.getStock(Resource.ORE), 1e-9);
-		assertEquals(2 * global(), state.getStock(Resource.BARS), 1e-9);
+		assertEquals(YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.DORICS_SECRETS) * global(),
+			state.getStock(Resource.BARS), 1e-9);
 	}
 
 	@Test
@@ -839,7 +847,9 @@ public class SettlementEngineTest
 	{
 		activate(state, SettlementEvent.FEELING_LUCKY);
 		engine.onClueCompleted(ClueTier.MASTER);
-		assertEquals(ClueTier.MASTER.getReward().get(Resource.CURIOS) * 2, state.getStock(Resource.CURIOS), 1e-9);
+		assertEquals(ClueTier.MASTER.getReward().get(Resource.CURIOS)
+			* YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.FEELING_LUCKY),
+			state.getStock(Resource.CURIOS), 1e-9);
 	}
 
 	@Test
@@ -847,7 +857,9 @@ public class SettlementEngineTest
 	{
 		activate(state, SettlementEvent.REDBERRY_PIE);
 		engine.onBossKill("Chambers of Xeric", BossTier.TIER_3, true);
-		assertEquals(Balance.RAID_ARTIFACTS_TIER_3 * 2, state.getStock(Resource.ARTIFACT), 1e-9);
+		assertEquals(Balance.RAID_ARTIFACTS_TIER_3
+			* YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.REDBERRY_PIE),
+			state.getStock(Resource.ARTIFACT), 1e-9);
 	}
 
 	@Test
@@ -860,10 +872,13 @@ public class SettlementEngineTest
 		engine.onClueCompleted(ClueTier.BEGINNER);
 		engine.onBossKill("Theatre of Blood: Entry Mode", BossTier.TIER_2, true);
 
-		assertEquals(1.5 * global(), state.getStock(Resource.LOGS), 1e-9);
-		assertEquals(1.5 * global(), state.getStock(Resource.BARS), 1e-9);
-		assertEquals(ClueTier.BEGINNER.getReward().get(Resource.CURIOS) * 1.5, state.getStock(Resource.CURIOS), 1e-9);
-		assertEquals(Balance.RAID_ARTIFACTS_TIER_2 * 1.5, state.getStock(Resource.ARTIFACT), 1e-9);
+		double festivalMultiplier = YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.SETTLEMENT_FESTIVAL);
+		assertEquals(festivalMultiplier * global(), state.getStock(Resource.LOGS), 1e-9);
+		assertEquals(festivalMultiplier * global(), state.getStock(Resource.BARS), 1e-9);
+		assertEquals(ClueTier.BEGINNER.getReward().get(Resource.CURIOS) * festivalMultiplier,
+			state.getStock(Resource.CURIOS), 1e-9);
+		assertEquals(Balance.RAID_ARTIFACTS_TIER_2 * festivalMultiplier,
+			state.getStock(Resource.ARTIFACT), 1e-9);
 	}
 
 	@Test
@@ -871,10 +886,13 @@ public class SettlementEngineTest
 	{
 		activate(state, SettlementEvent.FISH_MIGRATION);
 		activate(state, SettlementEvent.FISH_MIGRATION);
-		assertEquals(6, YieldCalculator.eventSkillMultiplier(state, Skill.FISHING), 1e-9);
+		double expectedMultiplier = 2
+			* YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.FISH_MIGRATION);
+		assertEquals(expectedMultiplier, YieldCalculator.eventSkillMultiplier(state, Skill.FISHING), 1e-9);
 
 		engine.onXp(Skill.FISHING, 100);
-		assertEquals(YieldCalculator.units(100) * global() * 6, state.getStock(Resource.FISH), 1e-9);
+		assertEquals(YieldCalculator.units(100) * global() * expectedMultiplier,
+			state.getStock(Resource.FISH), 1e-9);
 	}
 
 	@Test
