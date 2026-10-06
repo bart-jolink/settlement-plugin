@@ -70,9 +70,9 @@ public final class Balance
 	public static final int BOUNTY_ARTIFACT_TOWN_HALL = 6;
 	// monster part rewards roll between a tier 1 and a tier 3 boss kill's expected parts
 	public static final Map<Resource, Integer> BOUNTY_PARTS_MIN = Map.of(
-		Resource.MONSTER_PARTS, 20, Resource.RARE_MONSTER_PARTS, 5, Resource.EPIC_MONSTER_PARTS, 1);
+		Resource.MONSTER_PARTS, 200, Resource.RARE_MONSTER_PARTS, 25, Resource.EPIC_MONSTER_PARTS, 10);
 	public static final Map<Resource, Integer> BOUNTY_PARTS_MAX = Map.of(
-		Resource.MONSTER_PARTS, 200, Resource.RARE_MONSTER_PARTS, 100, Resource.EPIC_MONSTER_PARTS, 40);
+		Resource.MONSTER_PARTS, 500, Resource.RARE_MONSTER_PARTS, 100, Resource.EPIC_MONSTER_PARTS, 50);
 	public static final double BOUNTY_ARTIFACT_CHANCE = 0.02;
 	public static final double CLUE_PART_CHANCE = 0.10;
 	public static final int BOUNTY_SKILL_XP = 10_000;
