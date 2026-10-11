@@ -67,6 +67,20 @@ public class SettlementEngineTest
 		return controlledEngine;
 	}
 
+	private void assertBossRollSelects(double roll, Resource expectedResource)
+	{
+		SettlementState dropState = new SettlementState();
+		engineWithRoll(dropState, roll).onBossKill("Test boss", BossTier.TIER_2);
+
+		double expectedAmount = Balance.BOSS_PARTS_PER_DROP.get(BossTier.TIER_2);
+		for (Resource resource : new Resource[]{Resource.MONSTER_PARTS, Resource.RARE_MONSTER_PARTS,
+			Resource.EPIC_MONSTER_PARTS})
+		{
+			assertEquals(resource == expectedResource ? expectedAmount : 0,
+				dropState.getStock(resource), 1e-9);
+		}
+	}
+
 	private double global()
 	{
 		return YieldCalculator.globalMultiplier(state);
@@ -213,35 +227,38 @@ public class SettlementEngineTest
 	}
 
 	@Test
-	public void bossPartDropOddsIncreaseWithTierAndAreSeeded()
+	public void everyBossKillAwardsOneTierSizedPartBundle()
 	{
-		for (Resource resource : new Resource[]{Resource.MONSTER_PARTS, Resource.RARE_MONSTER_PARTS, Resource.EPIC_MONSTER_PARTS})
+		for (BossTier tier : BossTier.values())
 		{
-			double tierOne = bossPartStock(BossTier.TIER_1, resource, 2_000);
-			double tierTwo = bossPartStock(BossTier.TIER_2, resource, 2_000);
-			double tierThree = bossPartStock(BossTier.TIER_3, resource, 2_000);
+			SettlementState dropState = new SettlementState();
+			SettlementEngine dropEngine = engineWithRoll(dropState, 0.5);
+			dropEngine.onBossKill("Test boss", tier);
 
-			assertTrue(resource + " should drop at tier 1", tierOne > 0);
-			assertTrue(resource + " odds should increase at tier 2", tierTwo > tierOne);
-			assertTrue(resource + " odds should increase at tier 3", tierThree > tierTwo);
-			assertEquals(tierOne, bossPartStock(BossTier.TIER_1, resource, 2_000), 0);
+			double bundleSize = Balance.BOSS_PARTS_PER_DROP.get(tier);
+			double totalParts = dropState.getStock(Resource.MONSTER_PARTS)
+				+ dropState.getStock(Resource.RARE_MONSTER_PARTS)
+				+ dropState.getStock(Resource.EPIC_MONSTER_PARTS);
+			int awardedTypes = 0;
+			for (Resource resource : new Resource[]{Resource.MONSTER_PARTS, Resource.RARE_MONSTER_PARTS,
+				Resource.EPIC_MONSTER_PARTS})
+			{
+				if (dropState.getStock(resource) > 0)
+				{
+					awardedTypes++;
+				}
+			}
+			assertEquals(bundleSize, totalParts, 1e-9);
+			assertEquals(1, awardedTypes);
 		}
 	}
 
 	@Test
-	public void successfulBossPartRollAwardsTierQuantityForEachRarity()
+	public void tierTwoBossPartWeightsSelectEachRarity()
 	{
-		for (BossTier tier : new BossTier[]{BossTier.TIER_1, BossTier.TIER_2, BossTier.TIER_3})
-		{
-			SettlementState dropState = new SettlementState();
-			SettlementEngine dropEngine = engineWithRoll(dropState, 0);
-			dropEngine.onBossKill("Test boss", tier);
-
-			double expected = Balance.BOSS_PARTS_PER_DROP.get(tier);
-			assertEquals(expected, dropState.getStock(Resource.MONSTER_PARTS), 1e-9);
-			assertEquals(expected, dropState.getStock(Resource.RARE_MONSTER_PARTS), 1e-9);
-			assertEquals(expected, dropState.getStock(Resource.EPIC_MONSTER_PARTS), 1e-9);
-		}
+		assertBossRollSelects(34.0 / 47, Resource.MONSTER_PARTS);
+		assertBossRollSelects(40.0 / 47, Resource.RARE_MONSTER_PARTS);
+		assertBossRollSelects(46.0 / 47, Resource.EPIC_MONSTER_PARTS);
 	}
 
 	@Test
@@ -266,8 +283,9 @@ public class SettlementEngineTest
 		state.setLevel(Building.TROPHY_HALL, trophyLevel);
 		engine.onBossKill("Tier 2 raid", BossTier.TIER_2, true);
 		engine.onBossKill("Tier 3 raid", BossTier.TIER_3, true);
+		engine.onBossKill("Tier 4 raid", BossTier.TIER_4, true);
 
-		double expected = (Balance.RAID_ARTIFACTS_TIER_2 + Balance.RAID_ARTIFACTS_TIER_3)
+		double expected = (Balance.RAID_ARTIFACTS_TIER_2 + Balance.RAID_ARTIFACTS_TIER_3 + Balance.RAID_ARTIFACTS_TIER_4)
 			* YieldCalculator.trophyMultiplier(state);
 		assertEquals(expected, state.getStock(Resource.ARTIFACT), 1e-9);
 	}
@@ -278,11 +296,11 @@ public class SettlementEngineTest
 		engine.onBossKill("Nex", BossTier.TIER_3);
 		assertEquals(0, state.getStock(Resource.ARTIFACT), 0);
 
-		engine.onBossKill("Theatre of Blood: Entry Mode", BossTier.TIER_2, true);
-		assertEquals(Balance.RAID_ARTIFACTS_TIER_2, state.getStock(Resource.ARTIFACT), 0);
+		engine.onBossKill("Theatre of Blood: Entry Mode", BossTier.TIER_3, true);
+		assertEquals(Balance.RAID_ARTIFACTS_TIER_3, state.getStock(Resource.ARTIFACT), 0);
 
-		engine.onBossKill("Chambers of Xeric", BossTier.TIER_3, true);
-		assertEquals(Balance.RAID_ARTIFACTS_TIER_2 + Balance.RAID_ARTIFACTS_TIER_3,
+		engine.onBossKill("Chambers of Xeric", BossTier.TIER_4, true);
+		assertEquals(Balance.RAID_ARTIFACTS_TIER_3 + Balance.RAID_ARTIFACTS_TIER_4,
 			state.getStock(Resource.ARTIFACT), 0);
 	}
 
@@ -367,7 +385,7 @@ public class SettlementEngineTest
 	public void bossDropRollsUseStableResourceOrder()
 	{
 		AtomicInteger rollIndex = new AtomicInteger();
-		double[] rolls = {0.10, 0.04, 0.50};
+		double[] rolls = {0.10, 0.80, 0.99};
 		Random orderedRandom = new Random(42)
 		{
 			@Override
@@ -383,16 +401,18 @@ public class SettlementEngineTest
 		clearEvent(fresh);
 		rollIndex.set(0);
 		orderedEngine.onBossKill("Obor", BossTier.TIER_1);
+		orderedEngine.onBossKill("Obor", BossTier.TIER_1);
+		orderedEngine.onBossKill("Obor", BossTier.TIER_1);
 		assertEquals(Balance.BOSS_PARTS_PER_DROP.get(BossTier.TIER_1), fresh.getStock(Resource.MONSTER_PARTS), 0);
 		assertEquals(Balance.BOSS_PARTS_PER_DROP.get(BossTier.TIER_1), fresh.getStock(Resource.RARE_MONSTER_PARTS), 0);
-		assertEquals(0, fresh.getStock(Resource.EPIC_MONSTER_PARTS), 0);
+		assertEquals(Balance.BOSS_PARTS_PER_DROP.get(BossTier.TIER_1), fresh.getStock(Resource.EPIC_MONSTER_PARTS), 0);
 	}
 
 	@Test
 	public void higherBossTiersCountTowardLowerTierTasks()
 	{
 		Map<String, Double> keldagrim = state.getExpeditionProgress(ExpeditionId.KELDAGRIM).getObjectives();
-		engine.onBossKill("Vorkath", BossTier.TIER_2);
+		engine.onBossKill("Vorkath", BossTier.TIER_3);
 		engine.onBossKill("Nex", BossTier.TIER_3);
 		assertEquals(2, keldagrim.get("bosses1"), 0);
 
@@ -403,9 +423,9 @@ public class SettlementEngineTest
 		assertFalse(kourend.containsKey("skotizoKills"));
 		engine.onBossKill("Vorkath", BossTier.TIER_2);
 		assertFalse(kourend.containsKey("skotizoKills"));
-		engine.onBossKill("Skotizo", BossTier.TIER_1);
+		engine.onBossKill("Skotizo", BossTier.TIER_2);
 		assertEquals(1, kourend.get("skotizoKills"), 0);
-		engine.onBossKill("Chambers of Xeric Challenge Mode", BossTier.TIER_3, true);
+		engine.onBossKill("Chambers of Xeric Challenge Mode", BossTier.TIER_4, true);
 		assertEquals(1, kourend.get("chambersOfXericCompletions"), 0);
 	}
 
@@ -417,10 +437,10 @@ public class SettlementEngineTest
 		completeExpedition(ExpeditionId.GREAT_KOUREND);
 		Map<String, Double> desert = state.getExpeditionProgress(ExpeditionId.KHARIDIAN_DESERT).getObjectives();
 
-		engine.onBossKill("Tombs of Amascut: Entry Mode", BossTier.TIER_2, true);
-		engine.onBossKill("Tombs of Amascut: Expert Mode", BossTier.TIER_3, true);
+		engine.onBossKill("Tombs of Amascut: Entry Mode", BossTier.TIER_3, true);
+		engine.onBossKill("Tombs of Amascut: Expert Mode", BossTier.TIER_4, true);
 		assertEquals(2, desert.get("tombsOfAmascutCompletions"), 0);
-		engine.onBossKill("Theatre of Blood: Entry Mode", BossTier.TIER_2, true);
+		engine.onBossKill("Theatre of Blood: Entry Mode", BossTier.TIER_3, true);
 		assertEquals(2, desert.get("tombsOfAmascutCompletions"), 0);
 		engine.onBossKill("Kalphite Queen", BossTier.TIER_1);
 		assertEquals(1, desert.get("kalphiteQueenKills"), 0);
@@ -558,16 +578,14 @@ public class SettlementEngineTest
 	}
 
 	@Test
-	public void eliteCluesAverageATierOneBossKill()
+	public void eliteCluesAwardFixedPartsAndTheirConfiguredBonus()
 	{
-		int clues = 2000;
-		for (Resource part : new Resource[]{Resource.MONSTER_PARTS, Resource.RARE_MONSTER_PARTS, Resource.EPIC_MONSTER_PARTS})
-		{
-			double perKill = Balance.BOSS_PART_DROP_CHANCES.get(BossTier.TIER_1).get(part)
-				* Balance.BOSS_PARTS_PER_DROP.get(BossTier.TIER_1);
-			double perClue = cluePartStock(ClueTier.ELITE, part, clues) / clues;
-			assertEquals(part + " per elite clue", perKill, perClue, perKill * 0.25);
-		}
+		SettlementState clueState = new SettlementState();
+		engineWithRoll(clueState, 0).onClueCompleted(ClueTier.ELITE);
+
+		assertEquals(20, clueState.getStock(Resource.MONSTER_PARTS), 0);
+		assertEquals(5, clueState.getStock(Resource.RARE_MONSTER_PARTS), 0);
+		assertEquals(10, clueState.getStock(Resource.EPIC_MONSTER_PARTS), 0);
 	}
 
 	@Test
@@ -856,8 +874,8 @@ public class SettlementEngineTest
 	public void monsterDropEventMultipliesBossDrops()
 	{
 		activate(state, SettlementEvent.REDBERRY_PIE);
-		engine.onBossKill("Chambers of Xeric", BossTier.TIER_3, true);
-		assertEquals(Balance.RAID_ARTIFACTS_TIER_3
+		engine.onBossKill("Chambers of Xeric", BossTier.TIER_4, true);
+		assertEquals(Balance.RAID_ARTIFACTS_TIER_4
 			* YieldCalculator.effectiveEventMultiplier(state, SettlementEvent.REDBERRY_PIE),
 			state.getStock(Resource.ARTIFACT), 1e-9);
 	}

@@ -40,16 +40,19 @@ public final class Balance
 	public static final int KELDAGRIM_CONSORTIUM_PROCESSED_INPUT_AMOUNT = 300;
 	public static final int KELDAGRIM_CONSORTIUM_OUTPUT_AMOUNT = 100;
 	public static final double KELDAGRIM_CONSORTIUM_OUTPUT_BONUS_PER_LEVEL = 0.1;
-	public static final Map<BossTier, Map<Resource, Double>> BOSS_PART_DROP_CHANCES = Map.of(
+	public static final Map<BossTier, Map<Resource, Double>> BOSS_PART_DROP_WEIGHTS = Map.of(
 		BossTier.TIER_1, Map.of(Resource.MONSTER_PARTS, 0.20, Resource.RARE_MONSTER_PARTS, 0.05, Resource.EPIC_MONSTER_PARTS, 0.01),
 		BossTier.TIER_2, Map.of(Resource.MONSTER_PARTS, 0.35, Resource.RARE_MONSTER_PARTS, 0.1, Resource.EPIC_MONSTER_PARTS, 0.02),
-		BossTier.TIER_3, Map.of(Resource.MONSTER_PARTS, 0.50, Resource.RARE_MONSTER_PARTS, 0.2, Resource.EPIC_MONSTER_PARTS, 0.05));
+		BossTier.TIER_3, Map.of(Resource.MONSTER_PARTS, 0.50, Resource.RARE_MONSTER_PARTS, 0.2, Resource.EPIC_MONSTER_PARTS, 0.05),
+		BossTier.TIER_4, Map.of(Resource.MONSTER_PARTS, 0.65, Resource.RARE_MONSTER_PARTS, 0.3, Resource.EPIC_MONSTER_PARTS, 0.08));
 	public static final Map<BossTier, Integer> BOSS_PARTS_PER_DROP = Map.of(
 		BossTier.TIER_1, 100,
 		BossTier.TIER_2, 200,
-		BossTier.TIER_3, 400);
+		BossTier.TIER_3, 400,
+		BossTier.TIER_4, 800);
 	public static final int RAID_ARTIFACTS_TIER_2 = 1;
-	public static final int RAID_ARTIFACTS_TIER_3 = 2;
+	public static final int RAID_ARTIFACTS_TIER_3 = 1;
+	public static final int RAID_ARTIFACTS_TIER_4 = 2;
 
 	public static final int BOUNTY_SLOTS = 3;
 	public static final int BOUNTY_SUPPLY_WEIGHT = 4;
@@ -68,7 +71,7 @@ public final class Balance
 	public static final int BOUNTY_RARE_PARTS_TOWN_HALL = 3;
 	public static final int BOUNTY_EPIC_PARTS_TOWN_HALL = 5;
 	public static final int BOUNTY_ARTIFACT_TOWN_HALL = 6;
-	// monster part rewards roll between a tier 1 and a tier 3 boss kill's expected parts
+	// Monster part rewards roll between a tier 1 and a tier 4 boss kill's expected parts.
 	public static final Map<Resource, Integer> BOUNTY_PARTS_MIN = Map.of(
 		Resource.MONSTER_PARTS, 200, Resource.RARE_MONSTER_PARTS, 25, Resource.EPIC_MONSTER_PARTS, 10);
 	public static final Map<Resource, Integer> BOUNTY_PARTS_MAX = Map.of(
