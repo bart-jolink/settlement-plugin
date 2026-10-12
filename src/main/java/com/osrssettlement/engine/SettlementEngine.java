@@ -109,17 +109,24 @@ public class SettlementEngine
 		Map<Resource, Double> gained = new EnumMap<>(Resource.class);
 		double trophyMultiplier = YieldCalculator.trophyMultiplier(state);
 		double eventMultiplier = YieldCalculator.eventBossMultiplier(state);
-		new EnumMap<>(Balance.BOSS_PART_DROP_CHANCES.get(tier)).forEach((resource, chance) ->
+		Map<Resource, Double> weights = new EnumMap<>(Balance.BOSS_PART_DROP_WEIGHTS.get(tier));
+		double roll = random.nextDouble() * weights.values().stream().mapToDouble(Double::doubleValue).sum();
+		Resource selectedPart = null;
+		for (Map.Entry<Resource, Double> weight : weights.entrySet())
 		{
-			if (random.nextDouble() < chance)
+			selectedPart = weight.getKey();
+			if (roll < weight.getValue())
 			{
-				gained.merge(resource, Balance.BOSS_PARTS_PER_DROP.get(tier) * trophyMultiplier * eventMultiplier, Double::sum);
+				break;
 			}
-		});
+			roll -= weight.getValue();
+		}
+		gained.put(selectedPart, Balance.BOSS_PARTS_PER_DROP.get(tier) * trophyMultiplier * eventMultiplier);
 		if (raid)
 		{
-			int artifacts = tier == BossTier.TIER_2 ? Balance.RAID_ARTIFACTS_TIER_2
-				: tier == BossTier.TIER_3 ? Balance.RAID_ARTIFACTS_TIER_3 : 0;
+			int artifacts = tier == BossTier.TIER_4 ? Balance.RAID_ARTIFACTS_TIER_4
+				: tier == BossTier.TIER_3 ? Balance.RAID_ARTIFACTS_TIER_3
+				: tier == BossTier.TIER_2 ? Balance.RAID_ARTIFACTS_TIER_2 : 0;
 			if (artifacts > 0)
 			{
 				gained.merge(Resource.ARTIFACT, artifacts * trophyMultiplier * eventMultiplier, Double::sum);

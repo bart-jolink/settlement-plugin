@@ -23,20 +23,22 @@ public final class BossRegistry
 	{
 		register(BossTier.TIER_1,
 			"giant mole", "obor", "bryophyta", "scurrius", "sarachnis", "barrows", "deranged archaeologist",
-			"crazy archaeologist", "chaos fanatic", "chaos elemental", "king black dragon", "kalphite queen",
-			"dagannoth prime", "dagannoth rex", "dagannoth supreme", "skotizo", "hespori", "zalcano", "kraken",
+			"crazy archaeologist", "chaos fanatic", "king black dragon", "kalphite queen", "hespori", "zalcano", "kraken",
 			"tempoross",
-			"thermonuclear smoke devil", "amoxliatl", "lunar", "royal titans", "mimic", "scorpia", "artio",
-			"calvar'ion", "spindel", "brutus", "wintertodt");
+			"thermonuclear smoke devil", "amoxliatl", "lunar", "royal titans", "mimic", "brutus", "wintertodt",
+			"hueycoatl", "shellbane gryphon", "mad angel", "moons of peril");
 		register(BossTier.TIER_2,
-			"zulrah", "vorkath", "commander zilyana", "general graardor", "kree'arra", "k'ril tsutsaroth",
-			"cerberus", "abyssal sire", "alchemical hydra", "grotesque guardians", "gauntlet", "phantom muspah",
-			"callisto", "venenatis", "vet'ion", "corporeal beast", "nightmare", "duke sucellus", "leviathan",
-			"whisperer", "vardorvis", "hueycoatl", "tztok-jad", "araxxor", "doom of mokhaiotl",
-			"shellbane gryphon", "maggot king", "mad angel");
+			"commander zilyana", "k'ril tsutsaroth", "cerberus", "abyssal sire", "alchemical hydra",
+			"grotesque guardians", "gauntlet", "callisto", "venenatis", "vet'ion", "corporeal beast",
+			"tztok-jad", "araxxor", "chaos elemental", "dagannoth prime",
+			"dagannoth rex", "dagannoth supreme", "skotizo", "scorpia", "artio", "calvar'ion", "spindel",
+			"demonic gorilla");
 		register(BossTier.TIER_3,
-			"chambers of xeric", "theatre of blood", "tombs of amascut", "nex", "corrupted gauntlet",
-			"phosani's nightmare", "tzkal-zuk", "sol heredit", "yama");
+			"zulrah", "vorkath", "general graardor", "kree'arra", "phantom muspah", "duke sucellus",
+			"leviathan", "whisperer", "vardorvis", "maggot king", "corrupted gauntlet", "nex", "yama");
+		register(BossTier.TIER_4,
+			"chambers of xeric", "theatre of blood", "tombs of amascut", "nightmare", "phosani's nightmare",
+			"tzkal-zuk", "sol heredit", "doom of mokhaiotl", "yama's contracts");
 
 		List<String> names = new ArrayList<>(TIERS.keySet());
 		names.sort(Comparator.comparingInt(String::length).reversed());
@@ -80,11 +82,11 @@ public final class BossRegistry
 				BossTier tier = TIERS.get(known);
 				if (awakened)
 				{
-					return BossTier.TIER_3;
+					return BossTier.TIER_4;
 				}
-				if (entryMode && tier == BossTier.TIER_3)
+				if (entryMode && tier == BossTier.TIER_4)
 				{
-					return BossTier.TIER_2;
+					return BossTier.TIER_3;
 				}
 				return tier;
 			}

@@ -82,7 +82,7 @@ public final class ExpeditionCatalog
 
 		static Objective bosses(BossTier minTier, long target)
 		{
-			String tiers = minTier == BossTier.TIER_3 ? minTier.getDisplayName() : minTier.getDisplayName() + "+";
+			String tiers = minTier == BossTier.TIER_4 ? minTier.getDisplayName() : minTier.getDisplayName() + "+";
 			return new Objective("bosses" + (minTier.ordinal() + 1), "Defeat " + tiers + " bosses", target,
 				ObjectiveType.BOSS_KILLS, null, minTier, null);
 		}

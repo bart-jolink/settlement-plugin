@@ -6,7 +6,7 @@ import java.util.Map;
 import lombok.Getter;
 
 /**
- * Clue rewards. On average an Elite clue gives about what a tier 1 boss kill does (20 Basic, 5 Rare, 1 Epic).
+ * Clue rewards, with optional bonus part batches on Hard, Elite, and Master clues.
  */
 @Getter
 public enum ClueTier

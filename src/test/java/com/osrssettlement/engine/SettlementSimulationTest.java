@@ -191,7 +191,7 @@ public class SettlementSimulationTest
 					double raids = carry.get(activity) + 3 / 60.0;
 					for (; raids >= 1; raids--)
 					{
-						engine.onBossKill("Sim raid", BossTier.TIER_3, true);
+						engine.onBossKill("Sim raid", BossTier.TIER_4, true);
 					}
 					carry.put(activity, raids);
 					break;

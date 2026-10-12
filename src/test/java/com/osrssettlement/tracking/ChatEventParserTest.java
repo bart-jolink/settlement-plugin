@@ -32,15 +32,23 @@ public class ChatEventParserTest
 		assertEquals(BossTier.TIER_1, bossTier("Your <col=6800bf>Kalphite Queen (Echo)</col> kill count is:<col=e00a19>1</col>"));
 		assertEquals(BossTier.TIER_1, bossTier("Your subdued Wintertodt count is: <col=ff0000>4</col>."));
 		assertEquals(BossTier.TIER_1, bossTier("Your Tempoross kill count is: <col=ff0000>60</col>."));
-		assertEquals(BossTier.TIER_2, bossTier("Your Zulrah kill count is: <col=ff0000>4</col>."));
+		assertEquals(BossTier.TIER_1, bossTier("Your Moons of Peril completion count is: <col=ff0000>60</col>."));
+		assertEquals(BossTier.TIER_3, bossTier("Your Zulrah kill count is: <col=ff0000>4</col>."));
+		assertEquals(BossTier.TIER_2, bossTier("Your Demonic gorilla kill count is: <col=ff0000>4</col>."));
 		assertEquals(BossTier.TIER_1, bossTier("Your Zalcano kill count is: <col=ff0000>4</col>."));
+		assertEquals(BossTier.TIER_2, bossTier("Your Scorpia kill count is: <col=ff0000>3</col>."));
 		assertEquals(BossTier.TIER_2, bossTier("Your Gauntlet completion count is: <col=ff0000>123</col>."));
 		assertEquals(BossTier.TIER_3, bossTier("Your Corrupted Gauntlet completion count is: <col=ff0000>4729</col>."));
-		assertEquals(BossTier.TIER_3, bossTier("Your completed Chambers of Xeric count is: <col=ff0000>51</col>."));
-		assertEquals(BossTier.TIER_3, bossTier("Your completed Chambers of Xeric Challenge Mode count is: <col=ff0000>13</col>."));
-		assertEquals(BossTier.TIER_3, bossTier("Your completed Tombs of Amascut: Expert Mode count is: <col=ff0000>1</col>."));
-		assertEquals(BossTier.TIER_2, bossTier("Your completed Theatre of Blood: Entry Mode count is: <col=ff0000>73</col>."));
-		assertEquals(BossTier.TIER_3, bossTier("Your TzKal-Zuk kill count is: <col=ff0000>2</col>."));
+		assertEquals(BossTier.TIER_3, bossTier("Your Nex kill count is: <col=ff0000>4</col>."));
+		assertEquals(BossTier.TIER_3, bossTier("Your Yama kill count is: <col=ff0000>4</col>."));
+		assertEquals(BossTier.TIER_4, bossTier("Your Yama's Contracts kill count is: <col=ff0000>4</col>."));
+		assertEquals(BossTier.TIER_4, bossTier("Your completed Chambers of Xeric count is: <col=ff0000>51</col>."));
+		assertEquals(BossTier.TIER_4, bossTier("Your completed Chambers of Xeric Challenge Mode count is: <col=ff0000>13</col>."));
+		assertEquals(BossTier.TIER_4, bossTier("Your completed Tombs of Amascut: Expert Mode count is: <col=ff0000>1</col>."));
+		assertEquals(BossTier.TIER_3, bossTier("Your completed Theatre of Blood: Entry Mode count is: <col=ff0000>73</col>."));
+		assertEquals(BossTier.TIER_4, bossTier("Your Nightmare kill count is: <col=ff0000>4</col>."));
+		assertEquals(BossTier.TIER_4, bossTier("Your TzKal-Zuk kill count is: <col=ff0000>2</col>."));
+		assertEquals(BossTier.TIER_4, bossTier("Your Vardorvis (Awakened) kill count is: <col=ff0000>2</col>."));
 	}
 
 	@Test
