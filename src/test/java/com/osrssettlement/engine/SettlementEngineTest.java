@@ -132,6 +132,110 @@ public class SettlementEngineTest
 	}
 
 	@Test
+	public void gatheringSharesAndGemByproductsKeepTheirDistinctBoostRules()
+	{
+		for (Skill skill : new Skill[]{Skill.MINING, Skill.THIEVING})
+		{
+			SettlementState gatherState = new SettlementState();
+			SettlementEngine gatherEngine = engineWithRoll(gatherState, 0.5);
+			Building building = skill == Skill.MINING ? Building.QUARRY : Building.THIEVES_GUILD;
+			Resource output = skill == Skill.MINING ? Resource.ORE : Resource.COINS;
+			double share = skill == Skill.MINING ? 0.5 : 1;
+			double gemRate = skill == Skill.MINING ? 0.05 : 0.1;
+			gatherState.setLevel(building, 2);
+			activate(gatherState, SettlementEvent.SETTLEMENT_FESTIVAL);
+			gatherState.getBoosts().add(new Boost(output, 1.7, 100));
+			gatherState.getBoosts().add(new Boost(Resource.GEMS, 9, 100));
+			gatherEngine.onXp(skill, 317);
+			assertFalse(gatherState.getStock().containsKey(Resource.GEMS));
+
+			gatherState.getStock().clear();
+			gatherState.setLevel(building, 3);
+			gatherEngine.onXp(skill, 317);
+
+			double units = Math.pow(317 / 10.0, Math.log(8.0) / Math.log(10.0));
+			double activityMultiplier = ((1 + 0.2 * 3) * (1 + 0.02)) * 1.5;
+			assertEquals(units * share * activityMultiplier * 1.7, gatherState.getStock(output), 0);
+			assertEquals(units * gemRate * activityMultiplier, gatherState.getStock(Resource.GEMS), 0);
+			if (skill == Skill.MINING)
+			{
+				assertEquals(units * 0.5 * activityMultiplier, gatherState.getStock(Resource.STONE), 0);
+			}
+		}
+	}
+
+	@Test
+	public void queuedProcessingUsesCurrentModifiersAndOnlyAvailableInputs()
+	{
+		engine.onXp(Skill.SMITHING, 317);
+		double queued = state.getLabour(Skill.SMITHING);
+		state.setLevel(Building.FORGE, 3);
+		activate(state, SettlementEvent.DORICS_SECRETS);
+		activate(state, SettlementEvent.SETTLEMENT_FESTIVAL);
+		state.getBoosts().add(new Boost(Resource.BARS, 1.7, 100));
+		state.addStock(Resource.ORE, 1.25);
+
+		engine.onXp(Skill.WOODCUTTING, 10);
+
+		double ratio = ((1 + 0.1 * 3) * (1 + 0.02)) * (3.0 * 1.5);
+		assertEquals(2.5 * ratio * 1.7, state.getStock(Resource.BARS), 0);
+		assertEquals(0, state.getStock(Resource.ORE), 0);
+		assertEquals(queued - 2.5, state.getLabour(Skill.SMITHING), 0);
+	}
+
+	@Test
+	public void cookingConsumesFishBeforeGrain()
+	{
+		state.addStock(Resource.FISH, 0.25);
+		state.addStock(Resource.GRAIN, 10);
+
+		engine.onXp(Skill.COOKING, 10);
+
+		assertEquals(0, state.getStock(Resource.FISH), 0);
+		assertEquals(9.75, state.getStock(Resource.GRAIN), 0);
+		assertEquals(1.02, state.getStock(Resource.RATIONS), 0);
+	}
+
+	@Test
+	public void bossAndClueRewardsIgnoreGlobalBuildingsAndResourceBoosts()
+	{
+		SettlementState rewardState = new SettlementState();
+		SettlementEngine rewardEngine = engineWithRoll(rewardState, 0);
+		rewardState.setLevel(Building.TOWN_HALL, 7);
+		rewardState.setLevel(Building.WONDER, 3);
+		rewardState.setLevel(Building.ALTAR, 4);
+		rewardState.setLevel(Building.TOWER_OF_VOICES, 6);
+		rewardState.setLevel(Building.TROPHY_HALL, 3);
+		rewardState.setLevel(Building.TREASURY, 7);
+		for (Resource resource : Resource.values())
+		{
+			rewardState.getBoosts().add(new Boost(resource, 9, 100));
+		}
+		activate(rewardState, SettlementEvent.REDBERRY_PIE);
+		activate(rewardState, SettlementEvent.FEELING_LUCKY);
+		activate(rewardState, SettlementEvent.SETTLEMENT_FESTIVAL);
+
+		rewardEngine.onBossKill("Test raid", BossTier.TIER_3, true);
+
+		assertEquals(400 * (1 + 0.15 * 3) * (3.0 * 1.5), rewardState.getStock(Resource.MONSTER_PARTS), 0);
+		assertEquals(1 * (1 + 0.15 * 3) * (3.0 * 1.5), rewardState.getStock(Resource.ARTIFACT), 0);
+		rewardState.getStock().clear();
+
+		rewardEngine.onClueCompleted(ClueTier.MASTER);
+
+		double clueMultiplier = (1 + 0.15 * 7) * (3.0 * 1.5);
+		ClueTier.MASTER.getReward().forEach((resource, amount) ->
+		{
+			double expected = amount * clueMultiplier;
+			if (resource == ClueTier.MASTER.getBonusPart())
+			{
+				expected += ClueTier.MASTER.getBonusAmount() * clueMultiplier;
+			}
+			assertEquals(expected, rewardState.getStock(resource), 0);
+		});
+	}
+
+	@Test
 	public void buildingsBoostGathering()
 	{
 		state.setLevel(Building.LUMBER_CAMP, 2);
@@ -527,6 +631,27 @@ public class SettlementEngineTest
 	public void museumCampRaisesBountySupplyRewards()
 	{
 		assertTrue(supplyRewardTotal(5) > supplyRewardTotal(0));
+	}
+
+	@Test
+	public void libraryRoundsEachGrantedDurationBeforeExtendingExistingBoost()
+	{
+		state.setLevel(Building.ARCEUUS_LIBRARY, 1);
+		state.getBoosts().add(new Boost(Resource.LOGS, 2, 14));
+		for (int claim = 1; claim <= 2; claim++)
+		{
+			Bounty bounty = bounty(BountyType.CLUES, 1);
+			bounty.setProgress(1);
+			bounty.setReward(BountyReward.boost(Resource.LOGS, 1.5, 8));
+			state.getBounties().add(bounty);
+
+			engine.claimBounty(bounty.getId());
+
+			assertEquals(1, state.getBoosts().size());
+			assertEquals(14 + claim * 10, state.getBoosts().get(0).getRemainingTicks());
+			assertEquals(2, state.getBoosts().get(0).getMultiplier(), 0);
+			assertEquals(8, bounty.getReward().getBoostTicks());
+		}
 	}
 
 	private void completeExpedition(ExpeditionId id)

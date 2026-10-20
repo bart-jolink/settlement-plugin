@@ -73,20 +73,21 @@ public class SettlementEngine
 		}
 		else
 		{
-			double multiplier = YieldCalculator.gatherMultiplier(state, rule.getBuilding())
-				* YieldCalculator.eventSkillMultiplier(state, skill);
 			double slayerParts = 0;
-			for (Map.Entry<Resource, Double> output : rule.getOutputs().entrySet())
+			for (Resource output : rule.getOutputs().keySet())
 			{
-				double amount = units * output.getValue() * multiplier
-					* YieldCalculator.boostMultiplier(state, output.getKey());
-				gain(output.getKey(), amount);
-				if (skill == Skill.SLAYER && output.getKey() == Resource.MONSTER_PARTS)
+				double amount = YieldCalculator.gatheringYield(state, rule, output, units);
+				gain(output, amount);
+				if (skill == Skill.SLAYER && output == Resource.MONSTER_PARTS)
 				{
 					slayerParts += amount;
 				}
 			}
-			addByproducts(skill, units, multiplier);
+			double gems = YieldCalculator.gemByproductYield(state, rule, units);
+			if (gems > 0)
+			{
+				state.addStock(Resource.GEMS, gems);
+			}
 			if (skill == Skill.SLAYER)
 			{
 				progress(b -> b.getType() == BountyType.SLAYER_DROPS, slayerParts);
@@ -107,8 +108,6 @@ public class SettlementEngine
 	public void onBossKill(String boss, BossTier tier, boolean raid)
 	{
 		Map<Resource, Double> gained = new EnumMap<>(Resource.class);
-		double trophyMultiplier = YieldCalculator.trophyMultiplier(state);
-		double eventMultiplier = YieldCalculator.eventBossMultiplier(state);
 		Map<Resource, Double> weights = new EnumMap<>(Balance.BOSS_PART_DROP_WEIGHTS.get(tier));
 		double roll = random.nextDouble() * weights.values().stream().mapToDouble(Double::doubleValue).sum();
 		Resource selectedPart = null;
@@ -121,7 +120,7 @@ public class SettlementEngine
 			}
 			roll -= weight.getValue();
 		}
-		gained.put(selectedPart, Balance.BOSS_PARTS_PER_DROP.get(tier) * trophyMultiplier * eventMultiplier);
+		gained.put(selectedPart, YieldCalculator.bossYield(state, Balance.BOSS_PARTS_PER_DROP.get(tier)));
 		if (raid)
 		{
 			int artifacts = tier == BossTier.TIER_4 ? Balance.RAID_ARTIFACTS_TIER_4
@@ -129,7 +128,7 @@ public class SettlementEngine
 				: tier == BossTier.TIER_2 ? Balance.RAID_ARTIFACTS_TIER_2 : 0;
 			if (artifacts > 0)
 			{
-				gained.merge(Resource.ARTIFACT, artifacts * trophyMultiplier * eventMultiplier, Double::sum);
+				gained.merge(Resource.ARTIFACT, YieldCalculator.bossYield(state, artifacts), Double::sum);
 			}
 		}
 		gained.forEach(this::gain);
@@ -145,13 +144,12 @@ public class SettlementEngine
 
 	public void onClueCompleted(ClueTier tier)
 	{
-		double multiplier = YieldCalculator.treasuryMultiplier(state) * YieldCalculator.eventClueMultiplier(state);
 		Map<Resource, Double> gained = new EnumMap<>(Resource.class);
-		tier.getReward().forEach((resource, amount) -> gained.put(resource, amount * multiplier));
+		tier.getReward().forEach((resource, amount) -> gained.put(resource, YieldCalculator.clueYield(state, amount)));
 		Resource bonusPart = tier.getBonusPart();
 		if (bonusPart != null && random.nextDouble() < Balance.CLUE_PART_CHANCE)
 		{
-			gained.merge(bonusPart, tier.getBonusAmount() * multiplier, Double::sum);
+			gained.merge(bonusPart, YieldCalculator.clueYield(state, tier.getBonusAmount()), Double::sum);
 		}
 		gained.forEach(this::gain);
 		addLog(state, tier.getDisplayName() + " clue completed: " + describe(gained));
@@ -352,8 +350,7 @@ public class SettlementEngine
 		if (done > 0)
 		{
 			Resource output = rule.getOutput();
-			double ratio = YieldCalculator.processRatio(state, rule.getBuilding()) * YieldCalculator.eventSkillMultiplier(state, skill);
-			state.addStock(output, done * ratio * YieldCalculator.boostMultiplier(state, output));
+			state.addStock(output, YieldCalculator.processingYield(state, rule, done));
 		}
 
 		double leftover = pending - done;
@@ -388,27 +385,6 @@ public class SettlementEngine
 			{
 				process(rule, 0);
 			}
-		}
-	}
-
-	private void addByproducts(Skill skill, double units, double multiplier)
-	{
-		switch (skill)
-		{
-			case MINING:
-				if (state.getLevel(Building.QUARRY) >= Balance.GEM_MIN_BUILDING_LEVEL)
-				{
-					state.addStock(Resource.GEMS, units * Balance.QUARRY_GEM_RATE * multiplier);
-				}
-				break;
-			case THIEVING:
-				if (state.getLevel(Building.THIEVES_GUILD) >= Balance.GEM_MIN_BUILDING_LEVEL)
-				{
-					state.addStock(Resource.GEMS, units * Balance.THIEVES_GUILD_GEM_RATE * multiplier);
-				}
-				break;
-			default:
-				break;
 		}
 	}
 
@@ -516,7 +492,7 @@ public class SettlementEngine
 
 	private void grantBoost(BountyReward reward)
 	{
-		int ticks = (int) Math.round(reward.getBoostTicks() * YieldCalculator.libraryDurationMultiplier(state));
+		int ticks = YieldCalculator.boostDurationTicks(state, reward.getBoostTicks());
 		for (Boost boost : state.getBoosts())
 		{
 			if (boost.getResource() == reward.getBoostResource())

@@ -7,13 +7,14 @@ import com.osrssettlement.model.EventEffect;
 import com.osrssettlement.model.Resource;
 import com.osrssettlement.model.SettlementEvent;
 import com.osrssettlement.model.SettlementState;
+import com.osrssettlement.model.SkillRule;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Predicate;
 import net.runelite.api.Skill;
 
 /**
- * Converts XP into settlement units and computes the multipliers buildings, boosts and relics apply.
+ * Converts XP into settlement units and calculates production, loot and boost durations without changing state.
  */
 public final class YieldCalculator
 {
@@ -33,6 +34,55 @@ public final class YieldCalculator
 			return 0;
 		}
 		return Math.pow(xp / 10.0, EXPONENT);
+	}
+
+	static double gatheringYield(SettlementState state, SkillRule rule, Resource output, double units)
+	{
+		double multiplier = gatheringActivityMultiplier(state, rule);
+		return units * rule.getOutputs().get(output) * multiplier * boostMultiplier(state, output);
+	}
+
+	static double gemByproductYield(SettlementState state, SkillRule rule, double units)
+	{
+		double rate;
+		switch (rule.getSkill())
+		{
+			case MINING:
+				rate = Balance.QUARRY_GEM_RATE;
+				break;
+			case THIEVING:
+				rate = Balance.THIEVES_GUILD_GEM_RATE;
+				break;
+			default:
+				return 0;
+		}
+		if (state.getLevel(rule.getBuilding()) < Balance.GEM_MIN_BUILDING_LEVEL)
+		{
+			return 0;
+		}
+		return units * rate * gatheringActivityMultiplier(state, rule);
+	}
+
+	static double processingYield(SettlementState state, SkillRule rule, double completedWork)
+	{
+		double ratio = processRatio(state, rule.getBuilding()) * eventSkillMultiplier(state, rule.getSkill());
+		return completedWork * ratio * boostMultiplier(state, rule.getOutput());
+	}
+
+	static double bossYield(SettlementState state, double baseAmount)
+	{
+		return baseAmount * trophyMultiplier(state) * eventBossMultiplier(state);
+	}
+
+	static double clueYield(SettlementState state, double baseAmount)
+	{
+		double multiplier = treasuryMultiplier(state) * eventClueMultiplier(state);
+		return baseAmount * multiplier;
+	}
+
+	static int boostDurationTicks(SettlementState state, int baseTicks)
+	{
+		return (int) Math.round(baseTicks * libraryDurationMultiplier(state));
 	}
 
 	public static double globalMultiplier(SettlementState state)
@@ -84,7 +134,9 @@ public final class YieldCalculator
 		{
 			return multiplier;
 		}
-		return 1 + (multiplier - 1) * (1 + Balance.PYRAMID_EVENT_BONUS_PER_LEVEL * state.getLevel(Building.JALTEVAS_PYRAMID));
+		double eventBonus = multiplier - 1;
+		double pyramidMultiplier = 1 + Balance.PYRAMID_EVENT_BONUS_PER_LEVEL * state.getLevel(Building.JALTEVAS_PYRAMID);
+		return 1 + eventBonus * pyramidMultiplier;
 	}
 
 	public static double boostMultiplier(SettlementState state, Resource resource)
@@ -124,15 +176,20 @@ public final class YieldCalculator
 
 	public static double eventClueMultiplier(SettlementState state)
 	{
-		return eventMultiplier(state, EventEffect.CLUES);
+		return eventEffectMultiplier(state, EventEffect.CLUES);
 	}
 
 	public static double eventBossMultiplier(SettlementState state)
 	{
-		return eventMultiplier(state, EventEffect.MONSTER_DROPS);
+		return eventEffectMultiplier(state, EventEffect.MONSTER_DROPS);
 	}
 
-	private static double eventMultiplier(SettlementState state, EventEffect effect)
+	private static double gatheringActivityMultiplier(SettlementState state, SkillRule rule)
+	{
+		return gatherMultiplier(state, rule.getBuilding()) * eventSkillMultiplier(state, rule.getSkill());
+	}
+
+	private static double eventEffectMultiplier(SettlementState state, EventEffect effect)
 	{
 		return combinedEventMultiplier(state,
 			event -> event.getEffect() == effect || event.getEffect() == EventEffect.GLOBAL);
@@ -156,8 +213,12 @@ public final class YieldCalculator
 		double multiplier = 1;
 		for (Map.Entry<SettlementEvent, Integer> entry : counts.entrySet())
 		{
-			double single = effectiveEventMultiplier(state, entry.getKey());
-			multiplier *= entry.getKey().isBuff() ? single * entry.getValue() : Math.pow(single, entry.getValue());
+			SettlementEvent event = entry.getKey();
+			int occurrenceCount = entry.getValue();
+			double effectiveMultiplier = effectiveEventMultiplier(state, event);
+			double stackedMultiplier = event.isBuff()
+				? effectiveMultiplier * occurrenceCount : Math.pow(effectiveMultiplier, occurrenceCount);
+			multiplier *= stackedMultiplier;
 		}
 		return multiplier;
 	}

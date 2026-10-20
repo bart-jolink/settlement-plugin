@@ -50,6 +50,27 @@ Work only happens in this repository; the plugin-hub clone is a read-only refere
 - Attack/Strength/Defence/Ranged are ignored: Hitpoints XP covers every combat style and avoids double counting.
 - Processing without raw stock: the shortfall is stored as Labour for that skill (unlimited) and used automatically once raw materials arrive. A per-settlement Stock-tab toggle pauses only queued labour; new processing XP still uses available inputs, and resuming drains the queue. The pause setting persists per profile.
 
+## Calculation ownership
+
+`engine/YieldCalculator` is the pure numeric entry point for production, loot amounts and Library-adjusted boost durations. Its amount helpers come first, followed by the reusable building, event and resource-boost factors. `engine/SettlementEngine` owns activity handling, random draws, input availability/consumption, queued labour, stock changes, progress and logging; calculating an amount never changes settlement state.
+
+| Calculation | Entry point | Evaluation grouping |
+|---|---|---|
+| Direct skill output, including Slayer and Hitpoints | `gatheringYield` | `((units * outputShare) * activityFactor) * resourceBoost` |
+| Mining/Thieving gems | `gemByproductYield` | `(units * gemRate) * activityFactor`; building level 3 required, no resource boost |
+| Processing output | `processingYield` | `(completedWork * processingFactor) * resourceBoost` |
+| Boss parts and raid artifacts | `bossYield` | `(baseAmount * trophyFactor) * bossEventFactor` |
+| Fixed and bonus clue rewards | `clueYield` | `baseAmount * (treasuryFactor * clueEventFactor)` |
+| Granted boost duration | `boostDurationTicks` | `(int) Math.round(baseTicks * libraryFactor)` |
+
+- `units` converts each XP drop once. Output shares and input priority remain in `model/SkillRules`; completed processing work is determined by the engine, including when queued work drains without new processing XP.
+- `activityFactor` is `gatherMultiplier * eventSkillMultiplier`; `processingFactor` is `processRatio * eventSkillMultiplier`. Gathering/processing building factors include `globalMultiplier`, whose building contributions add before combining with other factors. Boss/clue rewards exclude global building bonuses and resource boosts, but include applicable global events.
+- Gems use deterministic rates from `engine/Balance`, without a gem resource boost. The engine credits eligible positive gem output separately, after normal outputs and before draining labour.
+- Different event types multiply in enum order. Repeated identical buffs add their effective factors; repeated setbacks compound. Jaltevas Pyramid strengthens only the positive portion of buffs. Event expiry remains owned by `EventScheduler`; the calculator uses the current event list.
+- `BountyBoard` retains generation-time Town Hall scaling, Museum-adjusted supply budgets, reward selection, rarity scaling, rounding and caps. Rarity adjusts stored boost duration during generation; Library duration is calculated and rounded separately at grant time, before extending an existing boost. Claims do not recalculate stored resource rewards.
+- `MarketService` retains exchange input/output pricing and rounding. `BuildingService` retains building cost scaling. Processing input cost remains in the engine and is not multiplied by output bonuses.
+- Formula extraction preserves arithmetic grouping, random draw order and existing integer conversions. Balance values remain in `engine/Balance` and the relevant catalogs; moving a formula does not retune the economy.
+
 ## Bounty rewards
 - Every non-blueprint objective uses the same reward-family roll: 5/9 supplies, 2/9 yield boost, 2/9 monster-part bundle. Boss and delivery objectives have no reward-family override.
 - Supply budgets are 400 units normally and 600 for delivery, divided between two or three distinct resources with equal packet-size probability. Common delivery supplies at Town Hall 1 pay 300 each for two resources or 200 each for three, before bonuses. Delivery supplies exclude the submitted resource; supplies retain a 10% chance to replace one entry with Basic Monster Parts.
