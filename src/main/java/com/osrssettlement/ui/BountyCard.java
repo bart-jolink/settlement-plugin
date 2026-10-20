@@ -6,8 +6,11 @@ import com.osrssettlement.model.BountyType;
 import com.osrssettlement.model.SettlementState;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Insets;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.ColorScheme;
@@ -23,7 +26,9 @@ class BountyCard extends JPanel
 	private final JLabel expiryLabel = Ui.label("", FontManager.getRunescapeSmallFont(), ColorScheme.MEDIUM_GRAY_COLOR);
 	private final ProgressBar progressBar = new ProgressBar();
 	private final JButton actionButton = new JButton();
+	private final JButton declineButton = new JButton("Decline");
 	private int bountyId = -1;
+	private String bountyDescription;
 
 	BountyCard(SettlementActions actions)
 	{
@@ -44,11 +49,42 @@ class BountyCard extends JPanel
 			}
 		});
 
+		declineButton.setFont(FontManager.getRunescapeSmallFont());
+		declineButton.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+		declineButton.setFocusPainted(false);
+		declineButton.setMargin(new Insets(1, 4, 1, 4));
+		declineButton.addActionListener(event ->
+		{
+			if (bountyId < 0)
+			{
+				return;
+			}
+			Runnable confirmedDecline = actions.prepareDeclineBounty(bountyId);
+			Object[] options = {"Decline", "Cancel"};
+			int choice = JOptionPane.showOptionDialog(this,
+				"Decline this bounty?\n" + bountyDescription
+					+ "\n\nYour supplies will be kept, but you will receive no reward.",
+				"Decline bounty", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+				null, options, options[1]);
+			if (choice == 0)
+			{
+				confirmedDecline.run();
+			}
+		});
+
+		JPanel declineRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+		declineRow.setOpaque(false);
+		declineRow.add(declineButton);
+		JPanel buttons = new JPanel(new BorderLayout(0, 4));
+		buttons.setOpaque(false);
+		buttons.add(actionButton, BorderLayout.NORTH);
+		buttons.add(declineRow, BorderLayout.SOUTH);
+
 		JPanel footer = new JPanel(new BorderLayout(0, 4));
 		footer.setOpaque(false);
 		footer.add(rewardLabel, BorderLayout.NORTH);
 		footer.add(expiryLabel, BorderLayout.CENTER);
-		footer.add(actionButton, BorderLayout.SOUTH);
+		footer.add(buttons, BorderLayout.SOUTH);
 
 		JPanel header = new JPanel(new DynamicGridLayout(0, 1, 0, 2));
 		header.setOpaque(false);
@@ -72,7 +108,8 @@ class BountyCard extends JPanel
 		}
 
 		bountyId = bounty.getId();
-		titleLabel.setText(Ui.wrap(bounty.describe()));
+		bountyDescription = bounty.describe();
+		titleLabel.setText(Ui.wrap(bountyDescription));
 		rarityLabel.setText(bounty.getRarity().getDisplayName());
 		setRarityColors(bounty.getRarity());
 
@@ -102,6 +139,8 @@ class BountyCard extends JPanel
 			: null);
 		actionButton.setVisible(ready);
 		actionButton.setEnabled(ready);
+		declineButton.setVisible(ready);
+		declineButton.setEnabled(ready);
 	}
 
 	private void setRarityColors(BountyRarity rarity)

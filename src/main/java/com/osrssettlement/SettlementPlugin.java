@@ -479,6 +479,27 @@ public class SettlementPlugin extends Plugin
 		}
 
 		@Override
+		public void declineBounty(int bountyId)
+		{
+			prepareDeclineBounty(bountyId).run();
+		}
+
+		@Override
+		public Runnable prepareDeclineBounty(int bountyId)
+		{
+			long selected = view.selected();
+			return () -> enqueue(selected, () ->
+			{
+				if (engine.declineBounty(bountyId))
+				{
+					markChanged();
+					saveNow();
+				}
+				pushUi();
+			}, true);
+		}
+
+		@Override
 		public void claimExpedition(ExpeditionId expeditionId)
 		{
 			runRewardAction(() -> engine.claimExpedition(expeditionId));

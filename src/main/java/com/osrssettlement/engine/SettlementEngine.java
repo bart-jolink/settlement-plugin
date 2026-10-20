@@ -302,6 +302,31 @@ public class SettlementEngine
 		return feedback;
 	}
 
+	public boolean declineBounty(int bountyId)
+	{
+		Bounty bounty = state.getBounties().stream()
+			.filter(candidate -> candidate.getId() == bountyId)
+			.findFirst()
+			.orElse(null);
+		if (bounty == null)
+		{
+			return false;
+		}
+
+		boolean ready = bounty.getType() == BountyType.DELIVER
+			? state.getStock(bounty.getResource()) >= bounty.getTarget()
+			: bounty.isComplete();
+		if (!ready)
+		{
+			return false;
+		}
+
+		state.getBounties().remove(bounty);
+		addLog(state, "Bounty declined: " + bounty.describe());
+		bountyBoard.fill(state);
+		return true;
+	}
+
 	private void process(SkillRule rule, double work)
 	{
 		Skill skill = rule.getSkill();
