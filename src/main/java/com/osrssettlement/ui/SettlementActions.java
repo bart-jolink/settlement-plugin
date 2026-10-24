@@ -13,6 +13,13 @@ public interface SettlementActions
 
 	void claimBounty(int bountyId);
 
+	void declineBounty(int bountyId);
+
+	default Runnable prepareDeclineBounty(int bountyId)
+	{
+		return () -> declineBounty(bountyId);
+	}
+
 	void claimExpedition(ExpeditionId expeditionId);
 
 	void tradeKeldagrimConsortium(Resource input, Resource output);

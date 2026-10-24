@@ -757,6 +757,108 @@ public class SettlementEngineTest
 	}
 
 	@Test
+	public void decliningReadyDeliveryKeepsSuppliesAndReplacesBounty()
+	{
+		Bounty bounty = bounty(BountyType.DELIVER, 100);
+		bounty.setResource(Resource.PLANKS);
+		state.getBounties().add(bounty);
+		state.addStock(Resource.PLANKS, 150);
+
+		assertTrue(engine.declineBounty(bounty.getId()));
+
+		assertEquals(150, state.getStock(Resource.PLANKS), 1e-9);
+		assertEquals(0, state.getStock(Resource.COINS), 0);
+		assertEquals(0, state.getBountiesCompleted());
+		assertEquals(0, bounty.getProgress(), 0);
+		assertFalse(state.getBounties().contains(bounty));
+		assertEquals(Balance.BOUNTY_SLOTS, state.getBounties().size());
+		assertTrue(state.getLog().get(0).getMessage().contains("Bounty declined:"));
+		assertNull(engine.claimBounty(bounty.getId()));
+	}
+
+	@Test
+	public void unfinishedDeliveryCannotBeDeclined()
+	{
+		Bounty bounty = bounty(BountyType.DELIVER, 100);
+		bounty.setResource(Resource.PLANKS);
+		state.getBounties().add(bounty);
+		state.addStock(Resource.PLANKS, 25);
+		int nextId = state.getNextBountyId();
+		int logSize = state.getLog().size();
+
+		assertFalse(engine.declineBounty(bounty.getId()));
+
+		assertEquals(25, state.getStock(Resource.PLANKS), 1e-9);
+		assertEquals(0, state.getBountiesCompleted());
+		assertTrue(state.getBounties().contains(bounty));
+		assertEquals(1, state.getBounties().size());
+		assertEquals(nextId, state.getNextBountyId());
+		assertEquals(logSize, state.getLog().size());
+	}
+
+	@Test
+	public void unfinishedProgressBountyCannotBeDeclined()
+	{
+		Bounty bounty = bounty(BountyType.CLUES, 2);
+		bounty.setProgress(1);
+		state.getBounties().add(bounty);
+		int nextId = state.getNextBountyId();
+		int logSize = state.getLog().size();
+
+		assertFalse(engine.declineBounty(bounty.getId()));
+
+		assertTrue(state.getBounties().contains(bounty));
+		assertEquals(1, state.getBounties().size());
+		assertEquals(nextId, state.getNextBountyId());
+		assertEquals(logSize, state.getLog().size());
+		assertEquals(0, state.getBountiesCompleted());
+	}
+
+	@Test
+	public void decliningDeliveryRechecksCurrentSupplies()
+	{
+		Bounty bounty = bounty(BountyType.DELIVER, 100);
+		bounty.setResource(Resource.PLANKS);
+		state.getBounties().add(bounty);
+		state.addStock(Resource.PLANKS, 100);
+		state.addStock(Resource.PLANKS, -1);
+
+		assertFalse(engine.declineBounty(bounty.getId()));
+
+		assertEquals(99, state.getStock(Resource.PLANKS), 1e-9);
+		assertTrue(state.getBounties().contains(bounty));
+		assertEquals(1, state.getBounties().size());
+	}
+
+	@Test
+	public void decliningCompletedBountyDoesNotGrantBlueprint()
+	{
+		Bounty bounty = bounty(BountyType.CLUES, 1);
+		bounty.setProgress(1);
+		bounty.setReward(BountyReward.blueprint(Building.SAWMILL));
+		state.getBounties().add(bounty);
+
+		assertTrue(engine.declineBounty(bounty.getId()));
+
+		assertFalse(state.getBlueprints().contains(Building.SAWMILL));
+		assertEquals(0, state.getBountiesCompleted());
+		assertFalse(state.getBounties().contains(bounty));
+	}
+
+	@Test
+	public void decliningUnknownBountyDoesNothing()
+	{
+		int nextId = state.getNextBountyId();
+		int logSize = state.getLog().size();
+
+		assertFalse(engine.declineBounty(-1));
+
+		assertTrue(state.getBounties().isEmpty());
+		assertEquals(nextId, state.getNextBountyId());
+		assertEquals(logSize, state.getLog().size());
+	}
+
+	@Test
 	public void boostsExpireWithPlaytime()
 	{
 		state.getBoosts().add(new Boost(Resource.LOGS, 2, 2));

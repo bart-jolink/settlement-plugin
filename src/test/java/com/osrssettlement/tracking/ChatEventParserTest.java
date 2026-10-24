@@ -44,6 +44,7 @@ public class ChatEventParserTest
 		assertEquals(BossTier.TIER_4, bossTier("Your Yama's Contracts kill count is: <col=ff0000>4</col>."));
 		assertEquals(BossTier.TIER_4, bossTier("Your completed Chambers of Xeric count is: <col=ff0000>51</col>."));
 		assertEquals(BossTier.TIER_4, bossTier("Your completed Chambers of Xeric Challenge Mode count is: <col=ff0000>13</col>."));
+		assertEquals(BossTier.TIER_4, bossTier("Your completed The Fractured Archive count is: <col=ff0000>1</col>."));
 		assertEquals(BossTier.TIER_4, bossTier("Your completed Tombs of Amascut: Expert Mode count is: <col=ff0000>1</col>."));
 		assertEquals(BossTier.TIER_3, bossTier("Your completed Theatre of Blood: Entry Mode count is: <col=ff0000>73</col>."));
 		assertEquals(BossTier.TIER_4, bossTier("Your Nightmare kill count is: <col=ff0000>4</col>."));
@@ -56,6 +57,7 @@ public class ChatEventParserTest
 	{
 		assertTrue(BossRegistry.isRaid("Chambers of Xeric Challenge Mode"));
 		assertTrue(BossRegistry.isRaid("Theatre of Blood: Entry Mode"));
+		assertTrue(BossRegistry.isRaid("The Fractured Archive"));
 		assertTrue(BossRegistry.isRaid("Tombs of Amascut: Expert Mode"));
 		assertFalse(BossRegistry.isRaid("Nex"));
 		assertFalse(BossRegistry.isRaid("Corrupted Gauntlet"));

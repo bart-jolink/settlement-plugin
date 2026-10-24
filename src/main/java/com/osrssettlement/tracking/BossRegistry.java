@@ -16,7 +16,7 @@ import java.util.Set;
 public final class BossRegistry
 {
 	private static final Map<String, BossTier> TIERS = new HashMap<>();
-	private static final Set<String> RAIDS = Set.of("chambers of xeric", "theatre of blood", "tombs of amascut");
+	private static final Set<String> RAIDS = Set.of("chambers of xeric", "theatre of blood", "tombs of amascut", "fractured archive");
 	private static final List<String> NAMES_LONGEST_FIRST;
 
 	static
@@ -37,7 +37,7 @@ public final class BossRegistry
 			"zulrah", "vorkath", "general graardor", "kree'arra", "phantom muspah", "duke sucellus",
 			"leviathan", "whisperer", "vardorvis", "maggot king", "corrupted gauntlet", "nex", "yama");
 		register(BossTier.TIER_4,
-			"chambers of xeric", "theatre of blood", "tombs of amascut", "nightmare", "phosani's nightmare",
+			"chambers of xeric", "theatre of blood", "tombs of amascut", "fractured archive", "nightmare", "phosani's nightmare",
 			"tzkal-zuk", "sol heredit", "doom of mokhaiotl", "yama's contracts");
 
 		List<String> names = new ArrayList<>(TIERS.keySet());
